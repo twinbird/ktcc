@@ -158,14 +158,25 @@ Node *primary() {
   return new_node_num(expect_number());
 }
 
+Node *unary() {
+  if (consume('+')) {
+    return primary();
+  }
+  if (consume('-')) {
+    // 0-xとして置き換える
+    return new_node(ND_SUB, new_node_num(0), primary());
+  }
+  return primary();
+}
+
 Node *mul() {
-  Node *node = primary();
+  Node *node = unary();
 
   for (;;) {
     if (consume('*')) {
-      node = new_node(ND_MUL, node, primary());
+      node = new_node(ND_MUL, node, unary());
     } else if (consume('/')) {
-      node = new_node(ND_DIV, node, primary());
+      node = new_node(ND_DIV, node, unary());
     } else {
       return node;
     }
