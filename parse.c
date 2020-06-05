@@ -10,6 +10,9 @@ Token *token;
 // 入力プログラム
 char *user_input;
 
+// パースされた抽象構文木
+Node *code[100];
+
 // 次のトークンが期待している記号の時には、
 // トークンを1つ読み進めてtrue.その他はfalse
 static bool consume(char *op) {
@@ -19,6 +22,17 @@ static bool consume(char *op) {
   }
   token = token->next;
   return true;
+}
+
+// 次のトークンが識別子の時には、
+// トークンを1つ読み進めて消費したトークンを返す
+static Token *consume_ident() {
+  Token *t = token;
+  if (t->kind != TK_IDENT) {
+    return false;
+  }
+  token = t->next;
+  return t;
 }
 
 // 次のトークンが期待している記号の時には、トークンを1つ読み進める。
@@ -81,8 +95,14 @@ Token *tokenize() {
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-        *p == ')' || *p == '<' || *p == '>') {
+        *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=') {
       cur = new_token(TK_RESERVED, cur, p++, 1);
+      continue;
+    }
+
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++, 1);
+      cur->len = 1;
       continue;
     }
 
@@ -114,10 +134,20 @@ static Node *new_node_num(int val) {
   return node;
 }
 
+static Node *expr();
+
 static Node *primary() {
   if (consume("(")) {
     Node *node = expr();
     expect(")");
+    return node;
+  }
+
+  Token *tok = consume_ident();
+  if (tok) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->offset = (tok->str[0] - 'a' + 1) * 8;
     return node;
   }
 
@@ -195,9 +225,28 @@ static Node *equality() {
   }
 }
 
-Node *expr() {
+static Node *assign() {
   Node *node = equality();
-
+  if (consume("=")) {
+    node = new_node(ND_ASSIGN, node, assign());
+  }
   return node;
 }
 
+static Node *expr() {
+  return assign();
+}
+
+static Node *stmt() {
+  Node *node = expr();
+  expect(";");
+  return node;
+}
+
+void program() {
+  int i = 0;
+  while (!at_eof()) {
+    code[i++] = stmt();
+  }
+  code[i] = NULL;
+}

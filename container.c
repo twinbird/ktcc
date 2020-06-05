@@ -17,3 +17,7 @@ void error_at(char *loc, char *fmt, ...) {
   exit(1);
 }
 
+void error(char *msg) {
+  fprintf(stderr, "%s\n", msg);
+  exit(1);
+}

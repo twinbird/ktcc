@@ -6,6 +6,7 @@
 // トークンの種類
 typedef enum {
   TK_RESERVED, // 記号
+  TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_EOF,      // 入力終わりを示すトークン
 } TokenKind;
@@ -22,15 +23,17 @@ struct Token {
 
 // 抽象構文木ノードの種類
 typedef enum {
-  ND_ADD, // +
-  ND_SUB, // -
-  ND_MUL, // *
-  ND_DIV, // /
-  ND_EQ,  // ==
-  ND_NE,  // !=
-  ND_LT,  // <と>
-  ND_LE,  // <=と>=
-  ND_NUM, // 整数
+  ND_ADD,    // +
+  ND_SUB,    // -
+  ND_MUL,    // *
+  ND_DIV,    // /
+  ND_EQ,     // ==
+  ND_NE,     // !=
+  ND_LT,     // <と>
+  ND_LE,     // <=と>=
+  ND_ASSIGN, // =
+  ND_LVAR,   // ローカル変数
+  ND_NUM,    // 整数
 } NodeKind;
 
 // 抽象構文木のノード
@@ -40,6 +43,7 @@ struct Node {
   Node *lhs;     // 左辺
   Node *rhs;     // 右辺
   int val;       // 値(kindがND_NUMの場合のみ利用する)
+  int offset; // 変数へのRBPからのオフセット(kindがND_LVARの場合)
 };
 
 // 現在着目しているトークン
@@ -48,8 +52,12 @@ extern Token *token;
 // 入力プログラム
 extern char *user_input;
 
+// 構文解析された入力プログラム
+extern Node *code[100];
+
 // エラーレポート関数
 extern void error_at(char *loc, char *fmt, ...);
+void error(char *msg);
 
 // コード生成して標準出力へ出力
 extern void gen(Node *node);
@@ -57,5 +65,6 @@ extern void gen(Node *node);
 // 標準入力文字列をトークナイズする
 extern Token *tokenize();
 
-Node *expr();
+// 構文解析の起点
+void program();
 #endif

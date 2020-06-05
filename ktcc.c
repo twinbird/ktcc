@@ -12,14 +12,25 @@ int main(int argc, char **argv) {
   token = tokenize();
 
   // parse
-  Node *node = expr();
+  program();
 
   // code generate
   printf(".intel_syntax noprefix\n");
   printf(".globl main\n");
   printf("main:\n");
-  gen(node);
-  printf("  pop rax\n");
+
+  // 変数26個分を確保しておく
+  printf("  push rbp\n");
+  printf("  mov rbp, rsp\n");
+  printf("  sub rsp, 208\n"); // 26 * 8 = 208
+
+  for (int i = 0; code[i]; i++) {
+    gen(code[i]);
+    // 式の評価結果をpop
+    printf("  pop rax\n");
+  }
+  printf("  mov rsp, rbp\n");
+  printf("  pop rbp\n");
   printf("	ret\n");
 
   return 0;
