@@ -13,6 +13,9 @@ char *user_input;
 // パースされた抽象構文木
 Node *code[100];
 
+// ローカル変数のリスト
+LVar *locals;
+
 // 次のトークンが期待している記号の時には、
 // トークンを1つ読み進めてtrue.その他はfalse
 static bool consume(char *op) {
@@ -101,8 +104,15 @@ Token *tokenize() {
     }
 
     if ('a' <= *p && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p++, 1);
-      cur->len = 1;
+      int len = 0;
+      char *q = p;
+      while (('a' <= *q && *q <= 'z') || ('0' <= *q && *q <= '9') ||
+             *q == '_') {
+        len++;
+        q++;
+      }
+      cur = new_token(TK_IDENT, cur, p, len);
+      p += len;
       continue;
     }
 
@@ -134,6 +144,15 @@ static Node *new_node_num(int val) {
   return node;
 }
 
+static LVar *find_lvar(Token *tok) {
+  for (LVar *var = locals; var; var = var->next) {
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
+      return var;
+    }
+  }
+  return NULL;
+}
+
 static Node *expr();
 
 static Node *primary() {
@@ -147,7 +166,19 @@ static Node *primary() {
   if (tok) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-    node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+    LVar *lvar = find_lvar(tok);
+    if (lvar) {
+      node->offset = lvar->offset;
+    } else {
+      lvar = calloc(1, sizeof(LVar));
+      lvar->next = locals;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      lvar->offset = locals == NULL ? 8 : locals->offset + 8;
+      node->offset = lvar->offset;
+      locals = lvar;
+    }
     return node;
   }
 

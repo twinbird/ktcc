@@ -46,6 +46,17 @@ struct Node {
   int offset; // 変数へのRBPからのオフセット(kindがND_LVARの場合)
 };
 
+// ローカル変数
+typedef struct LVar LVar;
+struct LVar {
+  LVar *next; // 次の変数かNULL
+  char *name; // 変数名
+  int len;    // 変数名の長さ
+  int offset; // RBPからのオフセット
+};
+
+extern LVar *locals;
+
 // 現在着目しているトークン
 extern Token *token;
 
