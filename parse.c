@@ -29,10 +29,10 @@ static bool consume(char *op) {
 
 // 次のトークンが識別子の時には、
 // トークンを1つ読み進めて消費したトークンを返す
-static Token *consume_ident() {
+static Token *consume_kind(TokenKind kind) {
   Token *t = token;
-  if (t->kind != TK_IDENT) {
-    return false;
+  if (t->kind != kind) {
+    return NULL;
   }
   token = t->next;
   return t;
@@ -77,6 +77,10 @@ static bool startswith(char *p, char *q) {
   return memcmp(p, q, strlen(q)) == 0;
 }
 
+static bool is_alnum(char p) {
+  return ('a' <= p && p <= 'z') || ('0' <= p && p <= '9') || (p == '_');
+}
+
 // 入力文字列pをトークナイズして返す
 Token *tokenize() {
   char *p = user_input;
@@ -103,11 +107,16 @@ Token *tokenize() {
       continue;
     }
 
+    if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
+      cur = new_token(TK_RETURN, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       int len = 0;
       char *q = p;
-      while (('a' <= *q && *q <= 'z') || ('0' <= *q && *q <= '9') ||
-             *q == '_') {
+      while (is_alnum(*q)) {
         len++;
         q++;
       }
@@ -162,7 +171,7 @@ static Node *primary() {
     return node;
   }
 
-  Token *tok = consume_ident();
+  Token *tok = consume_kind(TK_IDENT);
   if (tok) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
@@ -269,7 +278,15 @@ static Node *expr() {
 }
 
 static Node *stmt() {
-  Node *node = expr();
+  Node *node;
+
+  if (consume_kind(TK_RETURN)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
   expect(";");
   return node;
 }
