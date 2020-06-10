@@ -52,5 +52,17 @@ assert 3 'if (1 > 0)
             if (2 > 0)
               return 3;'
 assert 2 'if (1 < 0) return 1; else return 2;'
+assert 3 'i = 0;
+          while (i < 3) 
+            i = i + 1;
+          return i;'
+assert 4 'i = 0;
+          while (i = i + 1)
+            if (i == 4)
+              return i;'
+assert 0 'i = 0;
+          while (0)
+            return i + 1;
+          return i;'
 
 echo OK

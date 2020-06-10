@@ -11,6 +11,7 @@ typedef enum {
   TK_RETURN,   // 予約語:return
   TK_IF,       // 予約語:if
   TK_ELSE,     // 予約語:else
+  TK_WHILE,    // 予約語:while
   TK_EOF,      // 入力終わりを示すトークン
 } TokenKind;
 
@@ -39,6 +40,7 @@ typedef enum {
   ND_NUM,    // 整数
   ND_RETURN, // return
   ND_IF,     // if
+  ND_WHILE,  // while
 } NodeKind;
 
 // 抽象構文木のノード

@@ -81,6 +81,14 @@ static bool is_alnum(char p) {
   return ('a' <= p && p <= 'z') || ('0' <= p && p <= '9') || (p == '_');
 }
 
+static bool is_word(char *p, char *word) {
+  int len = strlen(word);
+  if (strncmp(p, word, len) == 0 && !is_alnum(p[len])) {
+    return true;
+  }
+  return false;
+}
+
 // 入力文字列pをトークナイズして返す
 Token *tokenize() {
   char *p = user_input;
@@ -107,21 +115,27 @@ Token *tokenize() {
       continue;
     }
 
-    if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
+    if (is_word(p, "return")) {
       cur = new_token(TK_RETURN, cur, p, 6);
       p += 6;
       continue;
     }
 
-    if (strncmp(p, "if", 2) == 0 && !is_alnum(p[2])) {
+    if (is_word(p, "if")) {
       cur = new_token(TK_IF, cur, p, 2);
       p += 2;
       continue;
     }
 
-    if (strncmp(p, "else", 4) == 0 && !is_alnum(p[4])) {
+    if (is_word(p, "else")) {
       cur = new_token(TK_ELSE, cur, p, 4);
       p += 4;
+      continue;
+    }
+
+    if (is_word(p, "while")) {
+      cur = new_token(TK_WHILE, cur, p, 5);
+      p += 5;
       continue;
     }
 
@@ -292,11 +306,7 @@ static Node *expr() {
 static Node *stmt() {
   Node *node;
 
-  if (consume_kind(TK_RETURN)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_RETURN;
-    node->lhs = expr();
-  } else if (consume_kind(TK_IF)) {
+  if (consume_kind(TK_IF)) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_IF;
     expect("(");
@@ -309,6 +319,22 @@ static Node *stmt() {
       node->els = NULL;
     }
     return node;
+  }
+
+  if (consume_kind(TK_WHILE)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    expect("(");
+    node->cond = expr();
+    expect(")");
+    node->then = stmt();
+    return node;
+  }
+
+  if (consume_kind(TK_RETURN)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
   } else {
     node = expr();
   }
