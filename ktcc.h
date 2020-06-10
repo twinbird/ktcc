@@ -9,6 +9,7 @@ typedef enum {
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_RETURN,   // 予約語:return
+  TK_IF,       // 予約語:if
   TK_EOF,      // 入力終わりを示すトークン
 } TokenKind;
 
@@ -36,6 +37,7 @@ typedef enum {
   ND_LVAR,   // ローカル変数
   ND_NUM,    // 整数
   ND_RETURN, // return
+  ND_IF,     // if
 } NodeKind;
 
 // 抽象構文木のノード
@@ -46,6 +48,8 @@ struct Node {
   Node *rhs;     // 右辺
   int val;       // 値(kindがND_NUMの場合のみ利用する)
   int offset; // 変数へのRBPからのオフセット(kindがND_LVARの場合)
+  Node *cond; // 条件式
+  Node *then; // 条件式がtrueの場合の文
 };
 
 // ローカル変数

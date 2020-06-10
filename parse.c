@@ -113,6 +113,12 @@ Token *tokenize() {
       continue;
     }
 
+    if (strncmp(p, "if", 2) == 0 && !is_alnum(p[2])) {
+      cur = new_token(TK_IF, cur, p, 2);
+      p += 2;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       int len = 0;
       char *q = p;
@@ -284,6 +290,14 @@ static Node *stmt() {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
+  } else if (consume_kind(TK_IF)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+    expect("(");
+    node->cond = expr();
+    expect(")");
+    node->then = stmt();
+    return node;
   } else {
     node = expr();
   }

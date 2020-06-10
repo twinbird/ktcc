@@ -1,6 +1,9 @@
 #include "ktcc.h"
 #include <stdio.h>
 
+// 分岐ラベルを作成するための通し番号
+static unsigned long branch_serial_no = 0;
+
 static void gen_lval(Node *node) {
   if (node->kind != ND_LVAR) {
     error("代入の左辺値が変数ではありません");
@@ -11,6 +14,8 @@ static void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+  unsigned long end_no = branch_serial_no++;
+
   switch (node->kind) {
   case ND_NUM:
     printf("  push %d\n", node->val);
@@ -36,6 +41,14 @@ void gen(Node *node) {
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("  ret\n");
+    return;
+  case ND_IF:
+    gen(node->cond);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je  .Lend%ld\n", end_no);
+    gen(node->then);
+    printf(".Lend%ld:\n", end_no);
     return;
   }
 
