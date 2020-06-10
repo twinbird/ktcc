@@ -10,6 +10,7 @@ typedef enum {
   TK_NUM,      // 整数トークン
   TK_RETURN,   // 予約語:return
   TK_IF,       // 予約語:if
+  TK_ELSE,     // 予約語:else
   TK_EOF,      // 入力終わりを示すトークン
 } TokenKind;
 
@@ -50,6 +51,7 @@ struct Node {
   int offset; // 変数へのRBPからのオフセット(kindがND_LVARの場合)
   Node *cond; // 条件式
   Node *then; // 条件式がtrueの場合の文
+  Node *els;  // 条件式がfalseの場合の文
 };
 
 // ローカル変数

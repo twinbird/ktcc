@@ -119,6 +119,12 @@ Token *tokenize() {
       continue;
     }
 
+    if (strncmp(p, "else", 4) == 0 && !is_alnum(p[4])) {
+      cur = new_token(TK_ELSE, cur, p, 4);
+      p += 4;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       int len = 0;
       char *q = p;
@@ -297,6 +303,11 @@ static Node *stmt() {
     node->cond = expr();
     expect(")");
     node->then = stmt();
+    if (consume_kind(TK_ELSE)) {
+      node->els = stmt();
+    } else {
+      node->els = NULL;
+    }
     return node;
   } else {
     node = expr();

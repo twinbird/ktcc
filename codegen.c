@@ -15,6 +15,7 @@ static void gen_lval(Node *node) {
 
 void gen(Node *node) {
   unsigned long end_no = branch_serial_no++;
+  unsigned long else_no = branch_serial_no++;
 
   switch (node->kind) {
   case ND_NUM:
@@ -46,8 +47,13 @@ void gen(Node *node) {
     gen(node->cond);
     printf("  pop rax\n");
     printf("  cmp rax, 0\n");
-    printf("  je  .Lend%ld\n", end_no);
+    printf("  je  .Lelse%ld\n", else_no);
     gen(node->then);
+    printf("  jmp .Lend%ld\n", end_no);
+    printf(".Lelse%ld:\n", else_no);
+    if (node->els) {
+      gen(node->els);
+    }
     printf(".Lend%ld:\n", end_no);
     return;
   }

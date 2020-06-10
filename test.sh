@@ -51,5 +51,6 @@ assert 2 'if (1 < 0) return 1; return 2;'
 assert 3 'if (1 > 0)
             if (2 > 0)
               return 3;'
+assert 2 'if (1 < 0) return 1; else return 2;'
 
 echo OK
