@@ -64,5 +64,8 @@ assert 0 'i = 0;
           while (0)
             return i + 1;
           return i;'
+assert 3 'for (i = 0; i < 3; i = i + 1)
+            1;
+          return i;'
 
 echo OK

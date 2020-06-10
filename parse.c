@@ -43,7 +43,7 @@ static Token *consume_kind(TokenKind kind) {
 static void expect(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       memcmp(token->str, op, token->len)) {
-    error_at(token->str, "'%c'ではありません", op);
+    error_at(token->str, "'%s'ではありません", op);
   }
   token = token->next;
 }
@@ -136,6 +136,12 @@ Token *tokenize() {
     if (is_word(p, "while")) {
       cur = new_token(TK_WHILE, cur, p, 5);
       p += 5;
+      continue;
+    }
+
+    if (is_word(p, "for")) {
+      cur = new_token(TK_FOR, cur, p, 3);
+      p += 3;
       continue;
     }
 
@@ -327,6 +333,32 @@ static Node *stmt() {
     expect("(");
     node->cond = expr();
     expect(")");
+    node->then = stmt();
+    return node;
+  }
+
+  if (consume_kind(TK_FOR)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_FOR;
+    expect("(");
+    if (!consume(";")) {
+      node->init = expr();
+      expect(";");
+    } else {
+      node->init = NULL;
+    }
+    if (!consume(";")) {
+      node->cond = expr();
+      expect(";");
+    } else {
+      node->cond = NULL;
+    }
+    if (!consume(")")) {
+      node->inc = expr();
+      expect(")");
+    } else {
+      node->inc = NULL;
+    }
     node->then = stmt();
     return node;
   }
