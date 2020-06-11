@@ -18,6 +18,7 @@ void gen(Node *node) {
   unsigned long else_no = branch_serial_no++;
   unsigned long while_no = branch_serial_no++;
   unsigned long for_no = branch_serial_no++;
+  List *l;
 
   switch (node->kind) {
   case ND_NUM:
@@ -85,6 +86,14 @@ void gen(Node *node) {
     }
     printf("  jmp .Lfor%ld\n", for_no);
     printf(".Lend%ld:\n", end_no);
+    return;
+  case ND_BLOCK:
+    l = node->stmts;
+    while (l) {
+      gen(l->data);
+      l = l->next;
+      printf("  pop rax\n");
+    }
     return;
   }
 

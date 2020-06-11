@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+List *list_add(List *l, void *data) {
+  List *n = malloc(sizeof(List));
+  n->next = l;
+  n->data = data;
+  return n;
+}
+
 // エラーレポート関数
 void error_at(char *loc, char *fmt, ...) {
   va_list ap;

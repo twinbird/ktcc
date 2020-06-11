@@ -110,7 +110,8 @@ Token *tokenize() {
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-        *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=') {
+        *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=' ||
+        *p == '{' || *p == '}') {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
@@ -363,6 +364,16 @@ static Node *stmt() {
     return node;
   }
 
+  if (consume("{")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_BLOCK;
+    node->stmts = NULL;
+    while (!consume("}")) {
+      node->stmts = list_add(node->stmts, (void *)stmt());
+    }
+    return node;
+  }
+
   if (consume_kind(TK_RETURN)) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
@@ -370,6 +381,7 @@ static Node *stmt() {
   } else {
     node = expr();
   }
+
   expect(";");
   return node;
 }

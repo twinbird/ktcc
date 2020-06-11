@@ -3,6 +3,13 @@
 
 #include "ktcc.h"
 
+typedef struct List List;
+struct List {
+  List *next;
+  void *data;
+};
+extern List *list_add(List *l, void *data);
+
 // トークンの種類
 typedef enum {
   TK_RESERVED, // 記号
@@ -43,6 +50,7 @@ typedef enum {
   ND_IF,     // if
   ND_WHILE,  // while
   ND_FOR,    // for
+  ND_BLOCK,  // { ... } で表現するブロック
 } NodeKind;
 
 // 抽象構文木のノード
@@ -53,11 +61,12 @@ struct Node {
   Node *rhs;     // 右辺
   int val;       // 値(kindがND_NUMの場合のみ利用する)
   int offset; // 変数へのRBPからのオフセット(kindがND_LVARの場合)
-  Node *init; // 初期化式(for)
-  Node *inc;  // インクリメント式(for)
-  Node *cond; // 条件式
-  Node *then; // 条件式がtrueの場合の文
-  Node *els;  // 条件式がfalseの場合の文
+  Node *init;  // 初期化式(for)
+  Node *inc;   // インクリメント式(for)
+  Node *cond;  // 条件式
+  Node *then;  // 条件式がtrueの場合の文
+  Node *els;   // 条件式がfalseの場合の文
+  List *stmts; // ブロック内の文
 };
 
 // ローカル変数

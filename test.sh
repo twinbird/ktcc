@@ -67,5 +67,10 @@ assert 0 'i = 0;
 assert 3 'for (i = 0; i < 3; i = i + 1)
             1;
           return i;'
+assert 6 'ret = 0;
+          for (i = 0; i < 4; i = i + 1) {
+            ret = ret + i;
+          }
+          return ret;'
 
 echo OK
