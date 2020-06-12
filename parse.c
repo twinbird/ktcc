@@ -206,22 +206,33 @@ static Node *primary() {
 
   Token *tok = consume_kind(TK_IDENT);
   if (tok) {
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_LVAR;
-
-    LVar *lvar = find_lvar(tok);
-    if (lvar) {
-      node->offset = lvar->offset;
+    if (consume("(")) {
+      // 関数
+      expect(")");
+      Node *node = calloc(1, sizeof(Node));
+      node->kind = ND_FUNC;
+      strncpy(node->func_name, tok->str, tok->len);
+      node->func_name[tok->len + 1] = '\0';
+      return node;
     } else {
-      lvar = calloc(1, sizeof(LVar));
-      lvar->next = locals;
-      lvar->name = tok->str;
-      lvar->len = tok->len;
-      lvar->offset = locals == NULL ? 8 : locals->offset + 8;
-      node->offset = lvar->offset;
-      locals = lvar;
+      // 変数
+      Node *node = calloc(1, sizeof(Node));
+      node->kind = ND_LVAR;
+
+      LVar *lvar = find_lvar(tok);
+      if (lvar) {
+        node->offset = lvar->offset;
+      } else {
+        lvar = calloc(1, sizeof(LVar));
+        lvar->next = locals;
+        lvar->name = tok->str;
+        lvar->len = tok->len;
+        lvar->offset = locals == NULL ? 8 : locals->offset + 8;
+        node->offset = lvar->offset;
+        locals = lvar;
+      }
+      return node;
     }
-    return node;
   }
 
   return new_node_num(expect_number());

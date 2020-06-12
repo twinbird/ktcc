@@ -3,6 +3,8 @@
 
 #include "ktcc.h"
 
+#define MAX_FUNCTION_NAME_LENGTH 255
+
 typedef struct List List;
 struct List {
   List *next;
@@ -51,6 +53,7 @@ typedef enum {
   ND_WHILE,  // while
   ND_FOR,    // for
   ND_BLOCK,  // { ... } で表現するブロック
+  ND_FUNC,   // 関数
 } NodeKind;
 
 // 抽象構文木のノード
@@ -61,12 +64,13 @@ struct Node {
   Node *rhs;     // 右辺
   int val;       // 値(kindがND_NUMの場合のみ利用する)
   int offset; // 変数へのRBPからのオフセット(kindがND_LVARの場合)
-  Node *init;  // 初期化式(for)
-  Node *inc;   // インクリメント式(for)
-  Node *cond;  // 条件式
-  Node *then;  // 条件式がtrueの場合の文
-  Node *els;   // 条件式がfalseの場合の文
-  List *stmts; // ブロック内の文
+  Node *init;                               // 初期化式(for)
+  Node *inc;                                // インクリメント式(for)
+  Node *cond;                               // 条件式
+  Node *then;                               // 条件式がtrueの場合の文
+  Node *els;                                // 条件式がfalseの場合の文
+  List *stmts;                              // ブロック内の文
+  char func_name[MAX_FUNCTION_NAME_LENGTH]; // 関数名
 };
 
 // ローカル変数

@@ -16,6 +16,24 @@ assert() {
   fi
 }
 
+assert_func() {
+  expected="$1"
+  input="$2"
+
+  echo -E "$3" > tmp.c
+  ./ktcc "$input" > tmp.s
+  cc -S tmp.c -o tmp2.s
+  cc tmp.s tmp2.s -o tmp
+  ./tmp
+  actual="$?"
+
+  if [ "$actual" = "$expected" ]; then
+    echo "$input => $actual"
+  else
+    echo "$input => $expected expected, but got $actual"
+  fi
+}
+
 assert 0 '0;'
 assert 42 '42;'
 assert 21 "5+20-4;"
@@ -72,5 +90,6 @@ assert 6 'ret = 0;
             ret = ret + i;
           }
           return ret;'
+assert_func 1 'return foo();' 'int foo() { return 1; }'
 
 echo OK
