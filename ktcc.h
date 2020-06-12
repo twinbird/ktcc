@@ -71,6 +71,7 @@ struct Node {
   Node *els;                                // 条件式がfalseの場合の文
   List *stmts;                              // ブロック内の文
   char func_name[MAX_FUNCTION_NAME_LENGTH]; // 関数名
+  List *args;                               // 関数の引数
 };
 
 // ローカル変数

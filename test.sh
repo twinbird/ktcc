@@ -91,5 +91,7 @@ assert 6 'ret = 0;
           }
           return ret;'
 assert_func 1 'return foo();' 'int foo() { return 1; }'
+assert_func 21 'return foo(1,2,3,4,5,6);' 'int foo(int a, int b, int c, int d, int e, int f) { return a+b+c+d+e+f; }'
+assert_func 2 'return foo(1);' 'int foo(int a) { return 1 + a; }'
 
 echo OK

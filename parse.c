@@ -111,7 +111,7 @@ Token *tokenize() {
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
         *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=' ||
-        *p == '{' || *p == '}') {
+        *p == '{' || *p == '}' || *p == ',') {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
@@ -208,9 +208,18 @@ static Node *primary() {
   if (tok) {
     if (consume("(")) {
       // 関数
-      expect(")");
       Node *node = calloc(1, sizeof(Node));
       node->kind = ND_FUNC;
+      // 引数
+      if (!consume(")")) {
+        for (int i = 0; i < 6; i++) {
+          node->args = list_add(node->args, expr());
+          if (!consume(",")) {
+            expect(")");
+            break;
+          }
+        }
+      }
       strncpy(node->func_name, tok->str, tok->len);
       node->func_name[tok->len + 1] = '\0';
       return node;

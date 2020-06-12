@@ -96,7 +96,43 @@ void gen(Node *node) {
     }
     return;
   case ND_FUNC:
-    // len指定
+    l = node->args;
+    if (l) {
+      gen(l->data);
+      printf("  pop rax\n");
+      printf("  mov rdi, rax\n");
+      l = l->next;
+    }
+    if (l) {
+      gen(l->data);
+      printf("  pop rax\n");
+      printf("  mov rsi, rax\n");
+      l = l->next;
+    }
+    if (l) {
+      gen(l->data);
+      printf("  pop rax\n");
+      printf("  mov rdx, rax\n");
+      l = l->next;
+    }
+    if (l) {
+      gen(l->data);
+      printf("  pop rax\n");
+      printf("  mov rcx, rax\n");
+      l = l->next;
+    }
+    if (l) {
+      gen(l->data);
+      printf("  pop rax\n");
+      printf("  mov r8, rax\n");
+      l = l->next;
+    }
+    if (l) {
+      gen(l->data);
+      printf("  pop rax\n");
+      printf("  mov r9, rax\n");
+      l = l->next;
+    }
     printf("  call %s\n", node->func_name);
     printf("  push rax\n");
     return;
