@@ -108,6 +108,12 @@ assert 6 'main() {
             }
             return ret;
           }'
+assert 4 'foo() {
+            return 2;
+          }
+          main() {
+            return foo() + foo();
+          }'
 assert_func 1 'main() { return foo(); }' 'int foo() { return 1; }'
 assert_func 21 'main() { return foo(1,2,3,4,5,6);}' 'int foo(int a, int b, int c, int d, int e, int f) { return a+b+c+d+e+f; }'
 assert_func 2 'main() { return foo(1); }' 'int foo(int a) { return 1 + a; }'
