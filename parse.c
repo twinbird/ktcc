@@ -13,6 +13,9 @@ char *user_input;
 // パースされた抽象構文木
 Node *code[100];
 
+// パースされた関数
+Node *funcs[100];
+
 // ローカル変数のリスト
 LVar *locals;
 
@@ -398,18 +401,33 @@ static Node *stmt() {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
+    expect(";");
+    return node;
   } else {
     node = expr();
+    expect(";");
+    return node;
   }
+}
 
-  expect(";");
+static Node *func_def() {
+  Token *tok = consume_kind(TK_IDENT);
+  expect("(");
+  expect(")");
+
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_FUNC_DEF;
+  node->func_body = stmt();
+  strncpy(node->func_def_name, tok->str, tok->len);
+  node->func_def_name[tok->len] = '\0';
+
   return node;
 }
 
 void program() {
   int i = 0;
   while (!at_eof()) {
-    code[i++] = stmt();
+    funcs[i++] = func_def();
   }
-  code[i] = NULL;
+  funcs[i] = NULL;
 }

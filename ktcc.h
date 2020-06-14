@@ -37,23 +37,24 @@ struct Token {
 
 // 抽象構文木ノードの種類
 typedef enum {
-  ND_ADD,    // +
-  ND_SUB,    // -
-  ND_MUL,    // *
-  ND_DIV,    // /
-  ND_EQ,     // ==
-  ND_NE,     // !=
-  ND_LT,     // <と>
-  ND_LE,     // <=と>=
-  ND_ASSIGN, // =
-  ND_LVAR,   // ローカル変数
-  ND_NUM,    // 整数
-  ND_RETURN, // return
-  ND_IF,     // if
-  ND_WHILE,  // while
-  ND_FOR,    // for
-  ND_BLOCK,  // { ... } で表現するブロック
-  ND_FUNC,   // 関数
+  ND_ADD,      // +
+  ND_SUB,      // -
+  ND_MUL,      // *
+  ND_DIV,      // /
+  ND_EQ,       // ==
+  ND_NE,       // !=
+  ND_LT,       // <と>
+  ND_LE,       // <=と>=
+  ND_ASSIGN,   // =
+  ND_LVAR,     // ローカル変数
+  ND_NUM,      // 整数
+  ND_RETURN,   // return
+  ND_IF,       // if
+  ND_WHILE,    // while
+  ND_FOR,      // for
+  ND_BLOCK,    // { ... } で表現するブロック
+  ND_FUNC,     // 関数
+  ND_FUNC_DEF, // 関数定義
 } NodeKind;
 
 // 抽象構文木のノード
@@ -70,8 +71,10 @@ struct Node {
   Node *then;                               // 条件式がtrueの場合の文
   Node *els;                                // 条件式がfalseの場合の文
   List *stmts;                              // ブロック内の文
-  char func_name[MAX_FUNCTION_NAME_LENGTH]; // 関数名
+  char func_name[MAX_FUNCTION_NAME_LENGTH]; // 実行する関数名
   List *args;                               // 関数の引数
+  char func_def_name[MAX_FUNCTION_NAME_LENGTH]; // 関数定義名
+  Node *func_body;                              // 関数本体
 };
 
 // ローカル変数
@@ -93,6 +96,9 @@ extern char *user_input;
 
 // 構文解析された入力プログラム
 extern Node *code[100];
+
+// 構文解析された関数群
+extern Node *funcs[100];
 
 // エラーレポート関数
 extern void error_at(char *loc, char *fmt, ...);

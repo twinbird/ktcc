@@ -136,6 +136,20 @@ void gen(Node *node) {
     printf("  call %s\n", node->func_name);
     printf("  push rax\n");
     return;
+  case ND_FUNC_DEF:
+    printf("%s:\n", node->func_def_name);
+
+    // 変数26個分を確保しておく
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+    printf("  sub rsp, 208\n"); // 26 * 8 = 208
+
+    gen(node->func_body);
+
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("	ret\n");
+    return;
   }
 
   gen(node->lhs);
