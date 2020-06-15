@@ -119,5 +119,6 @@ assert 21 'foo(a, b, c, d, e, f) { return a+b+c+d+e+f; } main() { return foo(1,2
 assert 2 'foo(a) { return 1 + a; } main() { return foo(1); }'
 assert 4 'bar(a, b) { return 1 + a + b; } main() { return bar(1, 2); }'
 assert 5 'fib(n) { if (n == 1) return 1; if (n == 2) return 1; return fib(n-2) + fib(n-1);} main() {return fib(5); }'
+assert 3 'main() { x = 3; y = &x; return *y; }'
 
 echo OK

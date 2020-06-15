@@ -66,6 +66,8 @@ typedef enum {
   ND_BLOCK,    // { ... } で表現するブロック
   ND_FUNC,     // 関数
   ND_FUNC_DEF, // 関数定義
+  ND_ADDR,     // &
+  ND_DEREF,    // *
 } NodeKind;
 
 // 抽象構文木のノード
