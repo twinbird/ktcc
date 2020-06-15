@@ -139,16 +139,52 @@ void gen(Node *node) {
   case ND_FUNC_DEF:
     printf("%s:\n", node->func_def_name);
 
-    // 変数26個分を確保しておく
+    // ベースポインタを変更
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
+
+    // localsを差し替える
+    LVar *l = locals;
+    locals = node->def_args;
+
+    // 引数の数を調べる
+    int nargs = 0;
+    for (LVar *p = l; p; p = p->next) {
+      nargs++;
+    }
+
+    // レジスタから引数の数だけスタックへ引数を移す
+    switch (nargs) {
+    case 6:
+      printf("  push r9\n");
+    case 5:
+      printf("  push r8\n");
+    case 4:
+      printf("  push rcx\n");
+    case 3:
+      printf("  push rdx\n");
+    case 2:
+      printf("  push rsi\n");
+    case 1:
+      printf("  push rdi\n");
+    default:
+      break;
+    }
+
+    // 変数26個分を確保しておく
     printf("  sub rsp, 208\n"); // 26 * 8 = 208
 
+    // 関数のコードを生成
     gen(node->func_body);
 
+    // localsを戻す
+    locals = l;
+
+    // ベースポインタを戻す
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("	ret\n");
+
     return;
   }
 

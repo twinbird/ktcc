@@ -114,8 +114,9 @@ assert 4 'foo() {
           main() {
             return foo() + foo();
           }'
-assert_func 1 'main() { return foo(); }' 'int foo() { return 1; }'
-assert_func 21 'main() { return foo(1,2,3,4,5,6);}' 'int foo(int a, int b, int c, int d, int e, int f) { return a+b+c+d+e+f; }'
-assert_func 2 'main() { return foo(1); }' 'int foo(int a) { return 1 + a; }'
+assert 1 'foo() { return 1; } main() { return foo(); }'
+assert 21 'foo(a, b, c, d, e, f) { return a+b+c+d+e+f; } main() { return foo(1,2,3,4,5,6);}'
+assert 2 'foo(a) { return 1 + a; } main() { return foo(1); }'
+assert 4 'bar(a, b) { return 1 + a + b; } main() { return bar(1, 2); }'
 
 echo OK

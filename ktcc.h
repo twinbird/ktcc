@@ -35,6 +35,17 @@ struct Token {
   int len;        // トークンの長さ
 };
 
+// ローカル変数
+typedef struct LVar LVar;
+struct LVar {
+  LVar *next; // 次の変数かNULL
+  char *name; // 変数名
+  int len;    // 変数名の長さ
+  int offset; // RBPからのオフセット
+};
+
+extern LVar *locals;
+
 // 抽象構文木ノードの種類
 typedef enum {
   ND_ADD,      // +
@@ -75,18 +86,8 @@ struct Node {
   List *args;                               // 関数の引数
   char func_def_name[MAX_FUNCTION_NAME_LENGTH]; // 関数定義名
   Node *func_body;                              // 関数本体
+  LVar *def_args;                               // 関数定義の引数
 };
-
-// ローカル変数
-typedef struct LVar LVar;
-struct LVar {
-  LVar *next; // 次の変数かNULL
-  char *name; // 変数名
-  int len;    // 変数名の長さ
-  int offset; // RBPからのオフセット
-};
-
-extern LVar *locals;
 
 // 現在着目しているトークン
 extern Token *token;

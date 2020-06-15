@@ -411,15 +411,36 @@ static Node *stmt() {
 }
 
 static Node *func_def() {
-  Token *tok = consume_kind(TK_IDENT);
-  expect("(");
-  expect(")");
-
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_FUNC_DEF;
-  node->func_body = stmt();
+
+  // 関数名
+  Token *tok = consume_kind(TK_IDENT);
   strncpy(node->func_def_name, tok->str, tok->len);
   node->func_def_name[tok->len] = '\0';
+
+  // 引数
+  LVar *lvar = NULL;
+  LVar *args = NULL;
+  expect("(");
+  if (!consume(")")) {
+    while ((tok = consume_kind(TK_IDENT)) != NULL) {
+      lvar = calloc(1, sizeof(LVar));
+      lvar->next = args;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      lvar->offset = locals == NULL ? 8 : locals->offset + 8;
+      args = lvar;
+      if (!consume(",")) {
+        expect(")");
+        break;
+      }
+    }
+  }
+  node->def_args = args;
+
+  // 定義本体
+  node->func_body = stmt();
 
   return node;
 }
