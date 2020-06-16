@@ -195,6 +195,16 @@ static Node *new_node_num(int val) {
   return node;
 }
 
+static LVar *new_lvar(LVar *list, Token *tok) {
+  LVar *lvar = calloc(1, sizeof(LVar));
+  lvar->next = list;
+  lvar->name = tok->str;
+  lvar->len = tok->len;
+  lvar->offset = list == NULL ? 8 : list->offset + 8;
+
+  return lvar;
+}
+
 static LVar *find_lvar(Token *tok) {
   for (LVar *var = locals; var; var = var->next) {
     if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
@@ -395,13 +405,7 @@ static Node *stmt() {
 
   if (consume_kind(TK_INT)) {
     Token *tok = consume_kind(TK_IDENT);
-    LVar *lvar = calloc(1, sizeof(LVar));
-    lvar->next = locals;
-    lvar->name = tok->str;
-    lvar->len = tok->len;
-    lvar->offset = locals == NULL ? 8 : locals->offset + 8;
-    node->offset = lvar->offset;
-    locals = lvar;
+    locals = new_lvar(locals, tok);
     expect(";");
 
     Node *node = calloc(1, sizeof(Node));
@@ -446,8 +450,7 @@ static Node *func_def() {
   node->func_def_name[tok->len] = '\0';
 
   // 引数
-  LVar *lvar = NULL;
-  LVar *args = NULL;
+  node->def_args = NULL;
   expect("(");
   if (!consume(")")) {
     while (1) {
@@ -459,19 +462,13 @@ static Node *func_def() {
       if (!tok) {
         error_at(token->str, "変数名が未指定です");
       }
-      lvar = calloc(1, sizeof(LVar));
-      lvar->next = args;
-      lvar->name = tok->str;
-      lvar->len = tok->len;
-      lvar->offset = args == NULL ? 8 : args->offset + 8;
-      args = lvar;
+      node->def_args = new_lvar(node->def_args, tok);
       if (!consume(",")) {
         expect(")");
         break;
       }
     }
   }
-  node->def_args = args;
 
   // ローカル変数を差し替えて定義本体を解析
   LVar *l = locals;
