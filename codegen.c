@@ -149,7 +149,7 @@ void gen(Node *node) {
 
     // 引数の数を調べる
     int nargs = 0;
-    for (LVar *p = l; p; p = p->next) {
+    for (LVar *p = locals; p; p = p->next) {
       nargs++;
     }
 
@@ -183,7 +183,7 @@ void gen(Node *node) {
     // ベースポインタを戻す
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
-    printf("	ret\n");
+    printf("  ret\n");
 
     return;
   case ND_ADDR:

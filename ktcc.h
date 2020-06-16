@@ -23,6 +23,7 @@ typedef enum {
   TK_WHILE,    // 予約語:while
   TK_FOR,      // 予約語:for
   TK_EOF,      // 入力終わりを示すトークン
+  TK_INT,      // 予約語:int
 } TokenKind;
 
 // トークン

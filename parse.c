@@ -149,6 +149,12 @@ Token *tokenize() {
       continue;
     }
 
+    if (is_word(p, "int")) {
+      cur = new_token(TK_INT, cur, p, 3);
+      p += 3;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       int len = 0;
       char *q = p;
@@ -235,13 +241,7 @@ static Node *primary() {
       if (lvar) {
         node->offset = lvar->offset;
       } else {
-        lvar = calloc(1, sizeof(LVar));
-        lvar->next = locals;
-        lvar->name = tok->str;
-        lvar->len = tok->len;
-        lvar->offset = locals == NULL ? 8 : locals->offset + 8;
-        node->offset = lvar->offset;
-        locals = lvar;
+        error_at(token->str, "宣言されていない変数が見つかりました");
       }
       return node;
     }
@@ -393,6 +393,22 @@ static Node *stmt() {
     return node;
   }
 
+  if (consume_kind(TK_INT)) {
+    Token *tok = consume_kind(TK_IDENT);
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->next = locals;
+    lvar->name = tok->str;
+    lvar->len = tok->len;
+    lvar->offset = locals == NULL ? 8 : locals->offset + 8;
+    node->offset = lvar->offset;
+    locals = lvar;
+    expect(";");
+
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    return node;
+  }
+
   if (consume("{")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_BLOCK;
@@ -420,6 +436,10 @@ static Node *func_def() {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_FUNC_DEF;
 
+  if (!consume_kind(TK_INT)) {
+    error("戻り値の型が未指定の関数定義があります");
+  }
+
   // 関数名
   Token *tok = consume_kind(TK_IDENT);
   strncpy(node->func_def_name, tok->str, tok->len);
@@ -430,12 +450,20 @@ static Node *func_def() {
   LVar *args = NULL;
   expect("(");
   if (!consume(")")) {
-    while ((tok = consume_kind(TK_IDENT)) != NULL) {
+    while (1) {
+      tok = consume_kind(TK_INT);
+      if (!tok) {
+        error_at(token->str, "型名が未指定です");
+      }
+      tok = consume_kind(TK_IDENT);
+      if (!tok) {
+        error_at(token->str, "変数名が未指定です");
+      }
       lvar = calloc(1, sizeof(LVar));
       lvar->next = args;
       lvar->name = tok->str;
       lvar->len = tok->len;
-      lvar->offset = locals == NULL ? 8 : locals->offset + 8;
+      lvar->offset = args == NULL ? 8 : args->offset + 8;
       args = lvar;
       if (!consume(",")) {
         expect(")");
@@ -445,8 +473,11 @@ static Node *func_def() {
   }
   node->def_args = args;
 
-  // 定義本体
+  // ローカル変数を差し替えて定義本体を解析
+  LVar *l = locals;
+  locals = node->def_args;
   node->func_body = stmt();
+  locals = l;
 
   return node;
 }
