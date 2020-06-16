@@ -22,15 +22,18 @@ void gen(Node *node) {
 
   switch (node->kind) {
   case ND_NUM:
+    debug_comment("ND_NUM");
     printf("  push %d\n", node->val);
     return;
   case ND_LVAR:
+    debug_comment("ND_LVAR");
     gen_lval(node);
     printf("  pop rax\n");
     printf("  mov rax, [rax]\n");
     printf("  push rax\n");
     return;
   case ND_ASSIGN:
+    debug_comment("ND_ASSIGN");
     gen_lval(node->lhs);
     gen(node->rhs);
 
@@ -40,6 +43,7 @@ void gen(Node *node) {
     printf("  push rdi\n");
     return;
   case ND_RETURN:
+    debug_comment("ND_RETURN");
     gen(node->lhs);
     printf("  pop rax\n");
     printf("  mov rsp, rbp\n");
@@ -47,6 +51,7 @@ void gen(Node *node) {
     printf("  ret\n");
     return;
   case ND_IF:
+    debug_comment("ND_IF");
     gen(node->cond);
     printf("  pop rax\n");
     printf("  cmp rax, 0\n");
@@ -60,6 +65,7 @@ void gen(Node *node) {
     printf(".Lend%ld:\n", end_no);
     return;
   case ND_WHILE:
+    debug_comment("ND_WHILE");
     printf(".Lwhile%ld:\n", while_no);
     gen(node->cond);
     printf("  pop rax\n");
@@ -70,6 +76,7 @@ void gen(Node *node) {
     printf(".Lend%ld:\n", end_no);
     return;
   case ND_FOR:
+    debug_comment("ND_FOR");
     if (node->init) {
       gen(node->init);
     }
@@ -88,6 +95,7 @@ void gen(Node *node) {
     printf(".Lend%ld:\n", end_no);
     return;
   case ND_BLOCK:
+    debug_comment("ND_BLOCK");
     l = node->stmts;
     while (l) {
       gen(l->data);
@@ -96,6 +104,7 @@ void gen(Node *node) {
     }
     return;
   case ND_FUNC:
+    debug_comment("ND_FUNC");
     l = node->args;
     if (l) {
       gen(l->data);
@@ -137,6 +146,7 @@ void gen(Node *node) {
     printf("  push rax\n");
     return;
   case ND_FUNC_DEF:
+    debug_comment("ND_FUNC_DEF");
     printf("%s:\n", node->func_def_name);
 
     // ベースポインタを変更
@@ -187,9 +197,11 @@ void gen(Node *node) {
 
     return;
   case ND_ADDR:
+    debug_comment("ND_ADDR");
     gen_lval(node->lhs);
     return;
   case ND_DEREF:
+    debug_comment("ND_DEREF");
     gen(node->lhs);
     printf("  pop rax\n");
     printf("  mov rax, [rax]\n");
@@ -205,34 +217,42 @@ void gen(Node *node) {
 
   switch (node->kind) {
   case ND_ADD:
+    debug_comment("ND_ADD");
     printf("  add rax, rdi\n");
     break;
   case ND_SUB:
+    debug_comment("ND_SUB");
     printf("  sub rax, rdi\n");
     break;
   case ND_MUL:
+    debug_comment("ND_MUL");
     printf("  imul rax, rdi\n");
     break;
   case ND_DIV:
+    debug_comment("ND_DIV");
     printf("  cqo\n");
     printf("  idiv rdi\n");
     break;
   case ND_EQ:
+    debug_comment("ND_EQ");
     printf("  cmp rax, rdi\n");
     printf("  sete al\n");
     printf("  movzb rax, al\n");
     break;
   case ND_NE:
+    debug_comment("ND_NE");
     printf("  cmp rax, rdi\n");
     printf("  setne al\n");
     printf("  movzb rax, al\n");
     break;
   case ND_LT:
+    debug_comment("ND_LT");
     printf("  cmp rax, rdi\n");
     printf("  setl al\n");
     printf("  movzb rax, al\n");
     break;
   case ND_LE:
+    debug_comment("ND_LE");
     printf("  cmp rax, rdi\n");
     printf("  setle al\n");
     printf("  movzb rax, al\n");

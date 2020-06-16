@@ -115,5 +115,8 @@ extern void gen(Node *node);
 extern Token *tokenize();
 
 // 構文解析の起点
-void program();
+extern void program();
+
+// アセンブリ出力にコメントを残す
+void debug_comment(char *msg);
 #endif
