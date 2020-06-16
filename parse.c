@@ -195,11 +195,12 @@ static Node *new_node_num(int val) {
   return node;
 }
 
-static LVar *new_lvar(LVar *list, Token *tok) {
+static LVar *new_lvar(LVar *list, Token *tok, Type *ty) {
   LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = list;
   lvar->name = tok->str;
   lvar->len = tok->len;
+  lvar->ty = ty;
   lvar->offset = list == NULL ? 8 : list->offset + 8;
 
   return lvar;
@@ -404,8 +405,19 @@ static Node *stmt() {
   }
 
   if (consume_kind(TK_INT)) {
+    // 型
+    Type *ty = calloc(1, sizeof(Type));
+    ty->kind = INT;
+    ty->ptr_to = NULL;
+    while (consume("*")) {
+      Type *t = calloc(1, sizeof(Type));
+      t->kind = PTR;
+      t->ptr_to = ty;
+      ty = t;
+    }
+    // 変数名
     Token *tok = consume_kind(TK_IDENT);
-    locals = new_lvar(locals, tok);
+    locals = new_lvar(locals, tok, ty);
     expect(";");
 
     Node *node = calloc(1, sizeof(Node));
@@ -454,15 +466,27 @@ static Node *func_def() {
   expect("(");
   if (!consume(")")) {
     while (1) {
+      // 型
       tok = consume_kind(TK_INT);
       if (!tok) {
         error_at(token->str, "型名が未指定です");
       }
+      Type *ty = calloc(1, sizeof(Type));
+      ty->kind = INT;
+      ty->ptr_to = NULL;
+      while (consume("*")) {
+        Type *t = calloc(1, sizeof(Type));
+        t->kind = PTR;
+        t->ptr_to = ty;
+        ty = t;
+      }
+
+      // 変数名
       tok = consume_kind(TK_IDENT);
       if (!tok) {
         error_at(token->str, "変数名が未指定です");
       }
-      node->def_args = new_lvar(node->def_args, tok);
+      node->def_args = new_lvar(node->def_args, tok, ty);
       if (!consume(",")) {
         expect(")");
         break;

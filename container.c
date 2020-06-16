@@ -1,6 +1,4 @@
 #include "ktcc.h"
-#include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 List *list_add(List *l, void *data) {

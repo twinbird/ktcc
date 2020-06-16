@@ -17,25 +17,6 @@ assert() {
   fi
 }
 
-assert_func() {
-  expected="$1"
-  input="$2"
-
-  echo -E "$3" > tmp.c
-  ./ktcc "$input" > tmp.s
-  cc -S tmp.c -o tmp2.s
-  cc tmp.s tmp2.s -o tmp
-  ./tmp
-  actual="$?"
-
-  if [ "$actual" = "$expected" ]; then
-    echo "$input => $actual"
-  else
-    echo "$input => $expected expected, but got $actual"
-    exit 1
-  fi
-}
-
 assert 0 'int main() { return 0; }'
 assert 42 'int main() { return 42; }'
 assert 21 "int main() { return 5+20-4; }"
@@ -126,5 +107,6 @@ assert 4 'int bar(int a, int b) { return 1 + a + b; } int main() { return bar(1,
 assert 21 'int foo(int a, int b, int c, int d, int e, int f) { return a+b+c+d+e+f; } int main() { return foo(1,2,3,4,5,6);}'
 assert 5 'int fib(int n) { if (n == 1) return 1; if (n == 2) return 1; return fib(n-2) + fib(n-1);} int main() {return fib(5); }'
 assert 3 'int main() { int x; int y; x = 3; y = &x; return *y; }'
+assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x; }'
 
 echo OK

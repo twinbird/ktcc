@@ -36,10 +36,22 @@ struct Token {
   int len;        // トークンの長さ
 };
 
+// 変数の型
+typedef enum {
+  INT,
+  PTR,
+} TypeKind;
+typedef struct Type Type;
+struct Type {
+  TypeKind kind;
+  struct Type *ptr_to; // ポインタの場合: 何を指す型か
+};
+
 // ローカル変数
 typedef struct LVar LVar;
 struct LVar {
   LVar *next; // 次の変数かNULL
+  Type *ty;   // 変数の型
   char *name; // 変数名
   int len;    // 変数名の長さ
   int offset; // RBPからのオフセット
@@ -117,6 +129,6 @@ extern Token *tokenize();
 // 構文解析の起点
 extern void program();
 
-// アセンブリ出力にコメントを残す
-void debug_comment(char *msg);
+// デバッグコメントを出力ソースへ書き残す
+extern void debug_comment(char *msg);
 #endif
