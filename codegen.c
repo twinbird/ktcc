@@ -13,6 +13,56 @@ static void gen_lval(Node *node) {
   printf("  push rax\n");
 }
 
+// ローカル変数に対する加算
+static void add_lvar(Node *node) {
+  switch (node->lhs->lvar->ty->kind) {
+  case INT:
+    printf("  add rax, rdi\n");
+    break;
+  case PTR:
+    switch (node->lhs->lvar->ty->ptr_to->kind) {
+    case INT:
+      printf("  imul rdi, 4\n");
+      printf("  add rax, rdi\n");
+      break;
+    case PTR:
+      printf("  imul rdi, 8\n");
+      printf("  add rax, rdi\n");
+      break;
+    default:
+      error("不明な型に対する+演算です");
+    }
+    break;
+  default:
+    error("不明な型に対する+演算です");
+  }
+}
+
+// ローカル変数に対する減算
+static void sub_lvar(Node *node) {
+  switch (node->lhs->lvar->ty->kind) {
+  case INT:
+    printf("  sub rax, rdi\n");
+    break;
+  case PTR:
+    switch (node->lhs->lvar->ty->ptr_to->kind) {
+    case INT:
+      printf("  imul rdi, 4\n");
+      printf("  sub rax, rdi\n");
+      break;
+    case PTR:
+      printf("  imul rdi, 8\n");
+      printf("  sub rax, rdi\n");
+      break;
+    default:
+      error("不明な型に対する-演算です");
+    }
+    break;
+  default:
+    error("不明な型に対する-演算です");
+  }
+}
+
 void gen(Node *node) {
   unsigned long end_no = branch_serial_no++;
   unsigned long else_no = branch_serial_no++;
@@ -222,11 +272,19 @@ void gen(Node *node) {
   switch (node->kind) {
   case ND_ADD:
     debug_comment("ND_ADD");
-    printf("  add rax, rdi\n");
+    if (node->lhs->kind == ND_LVAR) {
+      add_lvar(node);
+    } else {
+      printf("  add rax, rdi\n");
+    }
     break;
   case ND_SUB:
     debug_comment("ND_SUB");
-    printf("  sub rax, rdi\n");
+    if (node->lhs->kind == ND_LVAR) {
+      sub_lvar(node);
+    } else {
+      printf("  sub rax, rdi\n");
+    }
     break;
   case ND_MUL:
     debug_comment("ND_MUL");

@@ -17,6 +17,24 @@ assert() {
   fi
 }
 
+assert_ptr() {
+  expected="$1"
+  input="$2"
+
+  ./ktcc "$input" > tmp.s
+  cc -S test_ptr.c -o tmp2.s
+  cc -o tmp tmp.s tmp2.s
+  ./tmp
+  actual="$?"
+
+  if [ "$actual" = "$expected" ]; then
+    echo "$input => $actual"
+  else
+    echo "$input => $expected expected, but got $actual"
+    exit 1
+  fi
+}
+
 assert 0 'int main() { return 0; }'
 assert 42 'int main() { return 42; }'
 assert 21 "int main() { return 5+20-4; }"
@@ -108,5 +126,7 @@ assert 21 'int foo(int a, int b, int c, int d, int e, int f) { return a+b+c+d+e+
 assert 5 'int fib(int n) { if (n == 1) return 1; if (n == 2) return 1; return fib(n-2) + fib(n-1);} int main() {return fib(5); }'
 assert 3 'int main() { int x; int y; x = 3; y = &x; return *y; }'
 assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x; }'
+assert_ptr 10 'int main() { int sum; int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 1; sum = *q; q = q + 2; sum = sum + *q; return sum; } '
+assert_ptr 9 'int main() { int sum; int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p; sum = *q; q = q + 3; sum = sum + *q; return sum; } '
 
 echo OK
