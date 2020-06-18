@@ -250,7 +250,7 @@ static Node *primary() {
 
       LVar *lvar = find_lvar(tok);
       if (lvar) {
-        node->offset = lvar->offset;
+        node->lvar = lvar;
       } else {
         error_at(token->str, "宣言されていない変数が見つかりました");
       }
@@ -422,6 +422,7 @@ static Node *stmt() {
 
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
+    node->lvar = locals;
     return node;
   }
 

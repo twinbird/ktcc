@@ -9,7 +9,7 @@ static void gen_lval(Node *node) {
     error("代入の左辺値が変数ではありません");
   }
   printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset);
+  printf("  sub rax, %d\n", node->lvar->offset);
   printf("  push rax\n");
 }
 
