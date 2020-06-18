@@ -119,6 +119,12 @@ Token *tokenize() {
       continue;
     }
 
+    if (is_word(p, "sizeof")) {
+      cur = new_token(TK_SIZEOF, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if (is_word(p, "return")) {
       cur = new_token(TK_RETURN, cur, p, 6);
       p += 6;
@@ -261,7 +267,43 @@ static Node *primary() {
   return new_node_num(expect_number());
 }
 
+static Node *size_of_expr(Node *n) {
+  // ND_NUMなら4
+  if (n->kind == ND_NUM) {
+    return new_node_num(4);
+  }
+
+  // ND_LVARなら型によって分ける
+  if (n->kind == ND_LVAR) {
+    switch (n->lvar->ty->kind) {
+    case INT:
+      return new_node_num(4);
+    case PTR:
+      return new_node_num(8);
+    default:
+      error("不明な型です");
+    }
+  }
+  // ND_DEREFならデリファレンスした先のサイズ
+  if (n->kind == ND_DEREF) {
+    switch (n->lhs->lvar->ty->ptr_to->kind) {
+    case INT:
+      return new_node_num(4);
+    case PTR:
+      return new_node_num(8);
+    default:
+      error("不明な型です");
+    }
+  }
+
+  // その他の演算子なら左辺値のサイズ
+  return size_of_expr(n->lhs);
+}
+
 static Node *unary() {
+  if (consume_kind(TK_SIZEOF)) {
+    return size_of_expr(unary());
+  }
   if (consume("+")) {
     return primary();
   }

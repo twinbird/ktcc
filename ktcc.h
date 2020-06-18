@@ -24,6 +24,7 @@ typedef enum {
   TK_FOR,      // 予約語:for
   TK_EOF,      // 入力終わりを示すトークン
   TK_INT,      // 予約語:int
+  TK_SIZEOF,   // 予約語:sizeof
 } TokenKind;
 
 // トークン

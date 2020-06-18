@@ -128,5 +128,10 @@ assert 3 'int main() { int x; int y; x = 3; y = &x; return *y; }'
 assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x; }'
 assert_ptr 10 'int main() { int sum; int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 1; sum = *q; q = q + 2; sum = sum + *q; return sum; } '
 assert_ptr 9 'int main() { int sum; int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p; sum = *q; q = q + 3; sum = sum + *q; return sum; } '
+assert 4 'int main() { int x; return sizeof(x); }'
+assert 8 'int main() { int *x; return sizeof(x); }'
+assert 4 'int main() { int x; return sizeof(x + 3); }'
+assert 4 'int main() { return sizeof(3); }'
+assert 4 'int main() { int *x; return sizeof(*x); }'
 
 echo OK
