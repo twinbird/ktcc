@@ -2,6 +2,7 @@
 #define _KTCC_H_
 
 #include "ktcc.h"
+#include <stdbool.h>
 
 #define MAX_FUNCTION_NAME_LENGTH 255
 
@@ -51,11 +52,12 @@ struct Type {
 // ローカル変数
 typedef struct LVar LVar;
 struct LVar {
-  LVar *next; // 次の変数かNULL
-  Type *ty;   // 変数の型
-  char *name; // 変数名
-  int len;    // 変数名の長さ
-  int offset; // RBPからのオフセット
+  LVar *next;  // 次の変数かNULL
+  Type *ty;    // 変数の型
+  char *name;  // 変数名
+  int len;     // 変数名の長さ
+  int offset;  // RBPからのオフセット
+  bool is_arg; // 関数定義の引数ならtrue
 };
 
 extern LVar *locals;
@@ -102,7 +104,7 @@ struct Node {
   List *args;                                   // 関数の引数
   char func_def_name[MAX_FUNCTION_NAME_LENGTH]; // 関数定義名
   Node *func_body;                              // 関数本体
-  LVar *def_args;                               // 関数定義の引数
+  LVar *locals; // 関数定義内の変数(kind: ND_FUNC_DEFの場合)
 };
 
 // 現在着目しているトークン

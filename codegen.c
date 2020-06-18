@@ -209,12 +209,14 @@ void gen(Node *node) {
 
     // localsを差し替える
     LVar *l = locals;
-    locals = node->def_args;
+    locals = node->locals;
 
     // 引数の数を調べる
     int nargs = 0;
     for (LVar *p = locals; p; p = p->next) {
-      nargs++;
+      if (p->is_arg) {
+        nargs++;
+      }
     }
 
     // レジスタから引数の数だけスタックへ引数を移す

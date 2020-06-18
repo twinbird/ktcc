@@ -201,13 +201,14 @@ static Node *new_node_num(int val) {
   return node;
 }
 
-static LVar *new_lvar(LVar *list, Token *tok, Type *ty) {
+static LVar *new_lvar(LVar *list, Token *tok, Type *ty, bool is_arg) {
   LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = list;
   lvar->name = tok->str;
   lvar->len = tok->len;
   lvar->ty = ty;
   lvar->offset = list == NULL ? 8 : list->offset + 8;
+  lvar->is_arg = is_arg;
 
   return lvar;
 }
@@ -459,7 +460,7 @@ static Node *stmt() {
     }
     // 変数名
     Token *tok = consume_kind(TK_IDENT);
-    locals = new_lvar(locals, tok, ty);
+    locals = new_lvar(locals, tok, ty, false);
     expect(";");
 
     Node *node = calloc(1, sizeof(Node));
@@ -505,7 +506,7 @@ static Node *func_def() {
   node->func_def_name[tok->len] = '\0';
 
   // 引数
-  node->def_args = NULL;
+  node->locals = NULL;
   expect("(");
   if (!consume(")")) {
     while (1) {
@@ -529,7 +530,7 @@ static Node *func_def() {
       if (!tok) {
         error_at(token->str, "変数名が未指定です");
       }
-      node->def_args = new_lvar(node->def_args, tok, ty);
+      node->locals = new_lvar(node->locals, tok, ty, true);
       if (!consume(",")) {
         expect(")");
         break;
@@ -539,8 +540,9 @@ static Node *func_def() {
 
   // ローカル変数を差し替えて定義本体を解析
   LVar *l = locals;
-  locals = node->def_args;
+  locals = node->locals;
   node->func_body = stmt();
+  node->locals = locals;
   locals = l;
 
   return node;
