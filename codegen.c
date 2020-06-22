@@ -237,8 +237,14 @@ void gen(Node *node) {
       break;
     }
 
-    // 変数26個分を確保しておく
-    printf("  sub rsp, 208\n"); // 26 * 8 = 208
+    // 変数領域を確保しておく
+    unsigned int nalloc = 0;
+    for (LVar *p = locals; p; p = p->next) {
+      nalloc++;
+    }
+    // alloc_sizeは16の倍数でなければならないので調整する
+    unsigned int alloc_size = (8 * (nalloc + (nalloc % 2)));
+    printf("  sub rsp, %d\n", alloc_size);
 
     // 関数のコードを生成
     gen(node->func_body);
