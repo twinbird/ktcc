@@ -114,7 +114,8 @@ Token *tokenize() {
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
         *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=' ||
-        *p == '{' || *p == '}' || *p == ',' || *p == '&') {
+        *p == '{' || *p == '}' || *p == ',' || *p == '&' || *p == '[' ||
+        *p == ']') {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
@@ -451,6 +452,8 @@ static Node *stmt() {
     // 型
     Type *ty = calloc(1, sizeof(Type));
     ty->kind = INT;
+
+    // ポインタ?
     ty->ptr_to = NULL;
     while (consume("*")) {
       Type *t = calloc(1, sizeof(Type));
@@ -458,8 +461,22 @@ static Node *stmt() {
       t->ptr_to = ty;
       ty = t;
     }
+
     // 変数名
     Token *tok = consume_kind(TK_IDENT);
+
+    // 配列?
+    if (consume("[")) {
+      int n = expect_number();
+      expect("]");
+
+      Type *nt = calloc(1, sizeof(Type));
+      nt->kind = ARRAY;
+      nt->array_size = n;
+      nt->ptr_to = ty;
+      ty = nt;
+    }
+
     locals = new_lvar(locals, tok, ty, false);
     expect(";");
 

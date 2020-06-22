@@ -19,6 +19,8 @@ static void add_lvar(Node *node) {
   case INT:
     printf("  add rax, rdi\n");
     break;
+  case ARRAY:
+    // fallthrough
   case PTR:
     switch (node->lhs->lvar->ty->ptr_to->kind) {
     case INT:
@@ -44,6 +46,8 @@ static void sub_lvar(Node *node) {
   case INT:
     printf("  sub rax, rdi\n");
     break;
+  case ARRAY:
+    // fallthrough
   case PTR:
     switch (node->lhs->lvar->ty->ptr_to->kind) {
     case INT:
@@ -79,7 +83,10 @@ void gen(Node *node) {
     debug_comment("ND_LVAR");
     gen_lval(node);
     printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
+    // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
+    if (node->lvar->ty->kind != ARRAY) {
+      printf("  mov rax, [rax]\n");
+    }
     printf("  push rax\n");
     return;
   case ND_ASSIGN:
@@ -238,12 +245,25 @@ void gen(Node *node) {
     }
 
     // 変数領域を確保しておく
-    unsigned int nalloc = 0;
+    unsigned int alloc_size = 0;
     for (LVar *p = locals; p; p = p->next) {
-      nalloc++;
+      switch (p->ty->kind) {
+      case INT:
+        alloc_size += 8;
+        break;
+      case PTR:
+        alloc_size += 8;
+        break;
+      case ARRAY:
+        alloc_size += p->ty->array_size * 8;
+        break;
+      default:
+        error("不明な型が見つかりました");
+        break;
+      }
     }
     // alloc_sizeは16の倍数でなければならないので調整する
-    unsigned int alloc_size = (8 * (nalloc + (nalloc % 2)));
+    alloc_size += alloc_size % 16;
     printf("  sub rsp, %d\n", alloc_size);
 
     // 関数のコードを生成

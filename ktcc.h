@@ -3,6 +3,7 @@
 
 #include "ktcc.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 #define MAX_FUNCTION_NAME_LENGTH 255
 
@@ -42,11 +43,13 @@ struct Token {
 typedef enum {
   INT,
   PTR,
+  ARRAY,
 } TypeKind;
 typedef struct Type Type;
 struct Type {
   TypeKind kind;
   struct Type *ptr_to; // ポインタの場合: 何を指す型か
+  size_t array_size;
 };
 
 // ローカル変数
