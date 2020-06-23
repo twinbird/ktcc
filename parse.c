@@ -214,6 +214,15 @@ static LVar *new_lvar(LVar *list, Token *tok, Type *ty, bool is_arg) {
   return lvar;
 }
 
+static Type *new_type(TypeKind kind, Type *ptr_to, int array_size) {
+  Type *ty = calloc(1, sizeof(Type));
+  ty->kind = kind;
+  ty->ptr_to = ptr_to;
+  ty->array_size = array_size;
+
+  return ty;
+}
+
 static LVar *find_lvar(Token *tok) {
   for (LVar *var = locals; var; var = var->next) {
     if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
@@ -454,15 +463,11 @@ static Node *stmt() {
 
   if (consume_kind(TK_INT)) {
     // 型
-    Type *ty = calloc(1, sizeof(Type));
-    ty->kind = INT;
+    Type *ty = new_type(INT, NULL, 0);
 
     // ポインタ?
-    ty->ptr_to = NULL;
     while (consume("*")) {
-      Type *t = calloc(1, sizeof(Type));
-      t->kind = PTR;
-      t->ptr_to = ty;
+      Type *t = new_type(PTR, ty, 0);
       ty = t;
     }
 
@@ -474,10 +479,7 @@ static Node *stmt() {
       int n = expect_number();
       expect("]");
 
-      Type *nt = calloc(1, sizeof(Type));
-      nt->kind = ARRAY;
-      nt->array_size = n;
-      nt->ptr_to = ty;
+      Type *nt = new_type(ARRAY, ty, n);
       ty = nt;
     }
 
@@ -531,13 +533,9 @@ static Node *func_def() {
       if (!tok) {
         error_at(token->str, "型名が未指定です");
       }
-      Type *ty = calloc(1, sizeof(Type));
-      ty->kind = INT;
-      ty->ptr_to = NULL;
+      Type *ty = new_type(INT, NULL, 0);
       while (consume("*")) {
-        Type *t = calloc(1, sizeof(Type));
-        t->kind = PTR;
-        t->ptr_to = ty;
+        Type *t = new_type(PTR, ty, 0);
         ty = t;
       }
 
