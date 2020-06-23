@@ -236,8 +236,7 @@ static Node *primary() {
   if (tok) {
     if (consume("(")) {
       // 関数
-      Node *node = calloc(1, sizeof(Node));
-      node->kind = ND_FUNC;
+      Node *node = new_node(ND_FUNC, NULL, NULL);
       // 引数
       if (!consume(")")) {
         for (int i = 0; i < 6; i++) {
@@ -406,8 +405,7 @@ static Node *stmt() {
   Node *node;
 
   if (consume_kind(TK_IF)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_IF;
+    node = new_node(ND_IF, NULL, NULL);
     expect("(");
     node->cond = expr();
     expect(")");
@@ -421,8 +419,7 @@ static Node *stmt() {
   }
 
   if (consume_kind(TK_WHILE)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_WHILE;
+    node = new_node(ND_WHILE, NULL, NULL);
     expect("(");
     node->cond = expr();
     expect(")");
@@ -431,8 +428,7 @@ static Node *stmt() {
   }
 
   if (consume_kind(TK_FOR)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_FOR;
+    node = new_node(ND_FOR, NULL, NULL);
     expect("(");
     if (!consume(";")) {
       node->init = expr();
@@ -488,15 +484,13 @@ static Node *stmt() {
     locals = new_lvar(locals, tok, ty, false);
     expect(";");
 
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_LVAR;
+    Node *node = new_node(ND_LVAR, NULL, NULL);
     node->lvar = locals;
     return node;
   }
 
   if (consume("{")) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_BLOCK;
+    node = new_node(ND_BLOCK, NULL, NULL);
     node->stmts = NULL;
     while (!consume("}")) {
       node->stmts = list_add(node->stmts, (void *)stmt());
@@ -505,9 +499,7 @@ static Node *stmt() {
   }
 
   if (consume_kind(TK_RETURN)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_RETURN;
-    node->lhs = expr();
+    node = new_node(ND_RETURN, expr(), NULL);
     expect(";");
     return node;
   } else {
@@ -518,8 +510,7 @@ static Node *stmt() {
 }
 
 static Node *func_def() {
-  Node *node = calloc(1, sizeof(Node));
-  node->kind = ND_FUNC_DEF;
+  Node *node = new_node(ND_FUNC_DEF, NULL, NULL);
 
   if (!consume_kind(TK_INT)) {
     error("戻り値の型が未指定の関数定義があります");
