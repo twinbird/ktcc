@@ -252,17 +252,25 @@ static Node *primary() {
       node->func_name[tok->len + 1] = '\0';
       return node;
     } else {
-      // 変数
-      Node *node = calloc(1, sizeof(Node));
-      node->kind = ND_LVAR;
-
+      // 変数参照
       LVar *lvar = find_lvar(tok);
-      if (lvar) {
-        node->lvar = lvar;
-      } else {
+      if (!lvar) {
         error_at(token->str, "宣言されていない変数が見つかりました");
       }
-      return node;
+      Node *var_node = new_node(ND_LVAR, NULL, NULL);
+      var_node->lvar = lvar;
+
+      if (consume("[")) {
+        // 配列の添え字での参照
+        int idx = expect_number();
+        expect("]");
+        Node *offset_node = new_node_num(idx);
+        Node *ptr_node = new_node(ND_ADD, var_node, offset_node);
+        Node *deref_node = new_node(ND_DEREF, ptr_node, NULL);
+        return deref_node;
+      }
+
+      return var_node;
     }
   }
 
