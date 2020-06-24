@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #define MAX_FUNCTION_NAME_LENGTH 255
+#define MAX_VARIABLE_NAME_LENGTH 255
 
 typedef struct List List;
 struct List {
@@ -62,8 +63,17 @@ struct LVar {
   int offset;  // RBPからのオフセット
   bool is_arg; // 関数定義の引数ならtrue
 };
-
 extern LVar *locals;
+
+// グローバル変数
+typedef struct GVar GVar;
+struct GVar {
+  GVar *next; // 次の変数かNULL
+  Type *ty;   // 変数の型
+  char *name; // 変数名
+  int len;    // 変数名の長さ
+};
+extern GVar *globals;
 
 // 抽象構文木ノードの種類
 typedef enum {
@@ -77,6 +87,7 @@ typedef enum {
   ND_LE,       // <=と>=
   ND_ASSIGN,   // =
   ND_LVAR,     // ローカル変数
+  ND_GVAR,     // グローバル変数
   ND_NUM,      // 整数
   ND_RETURN,   // return
   ND_IF,       // if
@@ -97,6 +108,7 @@ struct Node {
   Node *rhs;     // 右辺
   int val;       // 値(kindがND_NUMの場合のみ利用する)
   LVar *lvar;    // ローカル変数(kindがND_LVARの場合)
+  GVar *gvar;    // グローバル変数(kindがND_GVARの場合)
   Node *init;    // 初期化式(for)
   Node *inc;     // インクリメント式(for)
   Node *cond;    // 条件式
@@ -129,6 +141,9 @@ void error(char *msg);
 
 // コード生成して標準出力へ出力
 extern void gen(Node *node);
+
+// グローバル変数のコードを生成して標準出力へ出力
+extern void gen_global();
 
 // 標準入力文字列をトークナイズする
 extern Token *tokenize();

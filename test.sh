@@ -136,5 +136,7 @@ assert 4 'int main() { int *x; return sizeof(*x); }'
 assert 1 'int main() { int a[10]; return 1; }'
 assert 3 'int main() { int a[2]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p+1);}'
 assert 3 'int main() { int a[2]; a[0] = 1; a[1] = 2; return a[0] + a[1];}'
+assert 3 'int x; int y[20]; int main() { y[0] = 1; y[1] = 2; x = y[0] + y[1]; return x;}'
+assert 1 'int x; int foo() { int x; x = 1; return x; } int main() { x = 3; return foo();}'
 
 echo OK

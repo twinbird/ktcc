@@ -13,6 +13,19 @@ static void gen_lval(Node *node) {
   printf("  push rax\n");
 }
 
+static void gen_gval(Node *node) {
+  if (node->kind != ND_GVAR) {
+    error("代入の左辺値が変数ではありません");
+  }
+
+  char label[MAX_VARIABLE_NAME_LENGTH];
+  snprintf(label, node->gvar->len + 1, "%s", node->gvar->name);
+
+  // printf("  mov rax, %s\n", label);
+  printf("  lea rax, %s[rip]\n", label);
+  printf("  push rax\n");
+}
+
 // ローカル変数に対する加算
 static void add_lvar(Node *node) {
   switch (node->lhs->lvar->ty->kind) {
@@ -89,12 +102,24 @@ void gen(Node *node) {
     }
     printf("  push rax\n");
     return;
+  case ND_GVAR:
+    debug_comment("ND_GVAR");
+    gen_gval(node);
+
+    if (node->gvar->ty->kind != ARRAY) {
+      printf("  pop rax\n");
+      printf("  mov rax, [rax]\n");
+      printf("  push rax\n");
+    }
+    return;
   case ND_ASSIGN:
     debug_comment("ND_ASSIGN");
     if (node->lhs->kind == ND_DEREF) {
       gen(node->lhs->lhs);
-    } else {
+    } else if (node->lhs->kind == ND_LVAR) {
       gen_lval(node->lhs);
+    } else {
+      gen_gval(node->lhs);
     }
     gen(node->rhs);
 
@@ -350,5 +375,40 @@ void gen(Node *node) {
   }
 
   printf("  push rax\n");
+}
+
+int alloc_size(Type *ty) {
+  if (!ty) {
+    error("不正な型が見つかりました");
+  }
+
+  switch (ty->kind) {
+  case INT:
+    return 4;
+    break;
+  case PTR:
+    return 8;
+    break;
+  case ARRAY:
+    return ty->array_size * alloc_size(ty->ptr_to);
+    break;
+  default:
+    error("不正な型が見つかりました");
+  }
+}
+
+void gen_global(GVar *globals) {
+  if (!globals) {
+    return;
+  }
+
+  char label[MAX_VARIABLE_NAME_LENGTH];
+  snprintf(label, globals->len + 1, "%s", globals->name);
+
+  printf("%s:\n", label);
+  printf("  .zero %d\n", alloc_size(globals->ty));
+
+  gen_global(globals->next);
+  return;
 }
 

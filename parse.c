@@ -19,6 +19,9 @@ Node *funcs[100];
 // ローカル変数のリスト
 LVar *locals;
 
+// グローバル変数のリスト
+GVar *globals;
+
 // 次のトークンが期待している記号の時には、
 // トークンを1つ読み進めてtrue.その他はfalse
 static bool consume(char *op) {
@@ -214,6 +217,16 @@ static LVar *new_lvar(LVar *list, Token *tok, Type *ty, bool is_arg) {
   return lvar;
 }
 
+static GVar *new_gvar(GVar *list, Token *tok, Type *ty) {
+  GVar *gvar = calloc(1, sizeof(GVar));
+  gvar->next = list;
+  gvar->name = tok->str;
+  gvar->len = tok->len;
+  gvar->ty = ty;
+
+  return gvar;
+}
+
 static Type *new_type(TypeKind kind, Type *ptr_to, int array_size) {
   Type *ty = calloc(1, sizeof(Type));
   ty->kind = kind;
@@ -250,6 +263,15 @@ static LVar *find_lvar(Token *tok) {
   return NULL;
 }
 
+static GVar *find_gvar(Token *tok) {
+  for (GVar *var = globals; var; var = var->next) {
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
+      return var;
+    }
+  }
+  return NULL;
+}
+
 static Node *expr();
 
 static Node *primary() {
@@ -279,12 +301,21 @@ static Node *primary() {
       return node;
     } else {
       // 変数参照
+      Node *var_node = NULL;
+
       LVar *lvar = find_lvar(tok);
-      if (!lvar) {
+      GVar *gvar = find_gvar(tok);
+      if (lvar) {
+        // ローカル変数
+        var_node = new_node(ND_LVAR, NULL, NULL);
+        var_node->lvar = lvar;
+      } else if (gvar) {
+        // グローバル変数
+        var_node = new_node(ND_GVAR, NULL, NULL);
+        var_node->gvar = gvar;
+      } else {
         error_at(token->str, "宣言されていない変数が見つかりました");
       }
-      Node *var_node = new_node(ND_LVAR, NULL, NULL);
-      var_node->lvar = lvar;
 
       if (consume("[")) {
         // 配列の添え字での参照
@@ -521,23 +552,22 @@ static Node *stmt() {
   }
 }
 
-static Node *func_def() {
+static Node *func_def(Type *ty, Token *ident) {
   Node *node = new_node(ND_FUNC_DEF, NULL, NULL);
 
-  node->return_type = consume_type_prefix();
+  node->return_type = ty;
   if (!node->return_type) {
     // 未指定ならINT
     node->return_type = new_type(INT, NULL, 0);
   }
 
   // 関数名
-  Token *tok = consume_kind(TK_IDENT);
+  Token *tok = ident;
   strncpy(node->func_def_name, tok->str, tok->len);
   node->func_def_name[tok->len] = '\0';
 
   // 引数
   node->locals = NULL;
-  expect("(");
   if (!consume(")")) {
     while (1) {
       // 型
@@ -569,10 +599,34 @@ static Node *func_def() {
   return node;
 }
 
+void gvar_def(Type *ty, Token *ident) {
+  // 配列?
+  if (consume("[")) {
+    int n = expect_number();
+    expect("]");
+
+    Type *nt = new_type(ARRAY, ty, n);
+    ty = nt;
+  }
+  expect(";");
+  globals = new_gvar(globals, ident, ty);
+}
+
 void program() {
   int i = 0;
   while (!at_eof()) {
-    funcs[i++] = func_def();
+    Type *ty = consume_type_prefix();
+    Token *ident = consume_kind(TK_IDENT);
+
+    if (ty == NULL || ident == NULL) {
+      error("不正な変数または関数宣言が見つかりました");
+    }
+
+    if (consume("(")) {
+      funcs[i++] = func_def(ty, ident);
+    } else {
+      gvar_def(ty, ident);
+    }
   }
   funcs[i] = NULL;
 }

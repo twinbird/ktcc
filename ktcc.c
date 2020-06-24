@@ -16,8 +16,12 @@ int main(int argc, char **argv) {
 
   // code generate
   printf(".intel_syntax noprefix\n");
-  printf(".globl main\n");
 
+  printf(".bss\n");
+  gen_global(globals);
+
+  printf(".text\n");
+  printf(".globl main\n");
   for (int i = 0; funcs[i]; i++) {
     gen(funcs[i]);
   }
