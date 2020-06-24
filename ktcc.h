@@ -107,6 +107,7 @@ struct Node {
   List *args;                                   // 関数の引数
   char func_def_name[MAX_FUNCTION_NAME_LENGTH]; // 関数定義名
   Node *func_body;                              // 関数本体
+  Type *return_type;                            // 関数の戻り値の型
   LVar *locals; // 関数定義内の変数(kind: ND_FUNC_DEFの場合)
 };
 

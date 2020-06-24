@@ -223,6 +223,24 @@ static Type *new_type(TypeKind kind, Type *ptr_to, int array_size) {
   return ty;
 }
 
+// 以降のトークンが型の表現の前半部分(識別子まで)の定義の場合、トークンを消費して型を返す。
+// その他はNULL
+static Type *consume_type_prefix() {
+  if (consume_kind(TK_INT)) {
+    // 型
+    Type *ty = new_type(INT, NULL, 0);
+
+    // ポインタ?
+    while (consume("*")) {
+      Type *t = new_type(PTR, ty, 0);
+      ty = t;
+    }
+
+    return ty;
+  }
+  return NULL;
+}
+
 static LVar *find_lvar(Token *tok) {
   for (LVar *var = locals; var; var = var->next) {
     if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
@@ -461,16 +479,8 @@ static Node *stmt() {
     return node;
   }
 
-  if (consume_kind(TK_INT)) {
-    // 型
-    Type *ty = new_type(INT, NULL, 0);
-
-    // ポインタ?
-    while (consume("*")) {
-      Type *t = new_type(PTR, ty, 0);
-      ty = t;
-    }
-
+  Type *ty = NULL;
+  if ((ty = consume_type_prefix())) {
     // 変数名
     Token *tok = consume_kind(TK_IDENT);
 
@@ -514,8 +524,10 @@ static Node *stmt() {
 static Node *func_def() {
   Node *node = new_node(ND_FUNC_DEF, NULL, NULL);
 
-  if (!consume_kind(TK_INT)) {
-    error("戻り値の型が未指定の関数定義があります");
+  node->return_type = consume_type_prefix();
+  if (!node->return_type) {
+    // 未指定ならINT
+    node->return_type = new_type(INT, NULL, 0);
   }
 
   // 関数名
@@ -529,14 +541,9 @@ static Node *func_def() {
   if (!consume(")")) {
     while (1) {
       // 型
-      tok = consume_kind(TK_INT);
-      if (!tok) {
+      Type *ty = consume_type_prefix();
+      if (!ty) {
         error_at(token->str, "型名が未指定です");
-      }
-      Type *ty = new_type(INT, NULL, 0);
-      while (consume("*")) {
-        Type *t = new_type(PTR, ty, 0);
-        ty = t;
       }
 
       // 変数名
