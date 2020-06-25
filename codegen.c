@@ -35,18 +35,8 @@ static void add_lvar(Node *node) {
   case ARRAY:
     // fallthrough
   case PTR:
-    switch (node->lhs->lvar->ty->ptr_to->kind) {
-    case INT:
-      printf("  imul rdi, 4\n");
-      printf("  add rax, rdi\n");
-      break;
-    case PTR:
-      printf("  imul rdi, 8\n");
-      printf("  add rax, rdi\n");
-      break;
-    default:
-      error("不明な型に対する+演算です");
-    }
+    printf("  imul rdi, %d\n", alloc_size(node->lhs->lvar->ty->ptr_to));
+    printf("  add rax, rdi\n");
     break;
   default:
     error("不明な型に対する+演算です");
@@ -62,18 +52,8 @@ static void sub_lvar(Node *node) {
   case ARRAY:
     // fallthrough
   case PTR:
-    switch (node->lhs->lvar->ty->ptr_to->kind) {
-    case INT:
-      printf("  imul rdi, 4\n");
-      printf("  sub rax, rdi\n");
-      break;
-    case PTR:
-      printf("  imul rdi, 8\n");
-      printf("  sub rax, rdi\n");
-      break;
-    default:
-      error("不明な型に対する-演算です");
-    }
+    printf("  imul rdi, %d\n", alloc_size(node->lhs->lvar->ty->ptr_to));
+    printf("  sub rax, rdi\n");
     break;
   default:
     error("不明な型に対する-演算です");
@@ -270,26 +250,26 @@ void gen(Node *node) {
     }
 
     // 変数領域を確保しておく
-    unsigned int alloc_size = 0;
+    unsigned int lvar_size = 0;
     for (LVar *p = locals; p; p = p->next) {
       switch (p->ty->kind) {
       case INT:
-        alloc_size += 8;
+        lvar_size += 8;
         break;
       case PTR:
-        alloc_size += 8;
+        lvar_size += 8;
         break;
       case ARRAY:
-        alloc_size += p->ty->array_size * 8;
+        lvar_size += p->ty->array_size * 8;
         break;
       default:
         error("不明な型が見つかりました");
         break;
       }
     }
-    // alloc_sizeは16の倍数でなければならないので調整する
-    alloc_size += alloc_size % 16;
-    printf("  sub rsp, %d\n", alloc_size);
+    // スタックポインタは16の倍数でなければならないので調整する
+    lvar_size += lvar_size % 16;
+    printf("  sub rsp, %d\n", lvar_size);
 
     // 関数のコードを生成
     gen(node->func_body);
@@ -375,26 +355,6 @@ void gen(Node *node) {
   }
 
   printf("  push rax\n");
-}
-
-int alloc_size(Type *ty) {
-  if (!ty) {
-    error("不正な型が見つかりました");
-  }
-
-  switch (ty->kind) {
-  case INT:
-    return 4;
-    break;
-  case PTR:
-    return 8;
-    break;
-  case ARRAY:
-    return ty->array_size * alloc_size(ty->ptr_to);
-    break;
-  default:
-    error("不正な型が見つかりました");
-  }
 }
 
 void gen_global(GVar *globals) {

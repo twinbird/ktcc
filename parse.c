@@ -335,32 +335,18 @@ static Node *primary() {
 }
 
 static Node *size_of_expr(Node *n) {
-  // ND_NUMなら4
+  // ND_NUMならint固定
   if (n->kind == ND_NUM) {
-    return new_node_num(4);
+    return new_node_num(type_kind_size(INT));
   }
 
   // ND_LVARなら型によって分ける
   if (n->kind == ND_LVAR) {
-    switch (n->lvar->ty->kind) {
-    case INT:
-      return new_node_num(4);
-    case PTR:
-      return new_node_num(8);
-    default:
-      error("不明な型です");
-    }
+    return new_node_num(alloc_size(n->lvar->ty));
   }
   // ND_DEREFならデリファレンスした先のサイズ
   if (n->kind == ND_DEREF) {
-    switch (n->lhs->lvar->ty->ptr_to->kind) {
-    case INT:
-      return new_node_num(4);
-    case PTR:
-      return new_node_num(8);
-    default:
-      error("不明な型です");
-    }
+    return new_node_num(alloc_size(n->lhs->lvar->ty->ptr_to));
   }
 
   // その他の演算子なら左辺値のサイズ

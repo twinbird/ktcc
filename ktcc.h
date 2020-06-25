@@ -153,4 +153,10 @@ extern void program();
 
 // デバッグコメントを出力ソースへ書き残す
 extern void debug_comment(char *msg);
+
+// 型のために割り当てるバイトサイズを返す
+extern int alloc_size(Type *ty);
+
+// 型のために割り当てるバイトサイズを返す
+int type_kind_size(TypeKind kind);
 #endif

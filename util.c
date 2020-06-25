@@ -25,3 +25,27 @@ void error(char *msg) {
 void debug_comment(char *msg) {
   printf("# %s\n", msg);
 }
+
+int type_kind_size(TypeKind kind) {
+  switch (kind) {
+  case INT:
+    return 4;
+    break;
+  case PTR:
+    return 8;
+    break;
+  default:
+    error("不正な型が見つかりました");
+  }
+}
+
+int alloc_size(Type *ty) {
+  if (!ty) {
+    error("不正な型が見つかりました");
+  }
+  if (ty->kind == ARRAY) {
+    return ty->array_size * alloc_size(ty->ptr_to);
+  }
+  return type_kind_size(ty->kind);
+}
+
