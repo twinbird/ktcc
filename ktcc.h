@@ -27,6 +27,7 @@ typedef enum {
   TK_FOR,      // 予約語:for
   TK_EOF,      // 入力終わりを示すトークン
   TK_INT,      // 予約語:int
+  TK_CHAR,     // 予約語:char
   TK_SIZEOF,   // 予約語:sizeof
 } TokenKind;
 
@@ -43,6 +44,7 @@ struct Token {
 // 変数の型
 typedef enum {
   INT,
+  CHAR,
   PTR,
   ARRAY,
 } TypeKind;
@@ -159,4 +161,7 @@ extern int alloc_size(Type *ty);
 
 // 型のために割り当てるバイトサイズを返す
 int type_kind_size(TypeKind kind);
+
+// ND_LVAR, ND_GVAR, ND_DEREFの示す変数の型を返す
+Type *type_of(Node *node);
 #endif

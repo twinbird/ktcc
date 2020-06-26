@@ -28,6 +28,9 @@ void debug_comment(char *msg) {
 
 int type_kind_size(TypeKind kind) {
   switch (kind) {
+  case CHAR:
+    return 1;
+    break;
   case INT:
     return 4;
     break;
@@ -49,3 +52,16 @@ int alloc_size(Type *ty) {
   return type_kind_size(ty->kind);
 }
 
+Type *type_of(Node *node) {
+  switch (node->kind) {
+  case ND_GVAR:
+    return node->gvar->ty;
+    break;
+  case ND_LVAR:
+    return node->lvar->ty;
+    break;
+  default:
+    return type_of(node->lhs);
+    break;
+  }
+}

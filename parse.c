@@ -165,6 +165,12 @@ Token *tokenize() {
       continue;
     }
 
+    if (is_word(p, "char")) {
+      cur = new_token(TK_CHAR, cur, p, 4);
+      p += 4;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       int len = 0;
       char *q = p;
@@ -251,6 +257,20 @@ static Type *consume_type_prefix() {
 
     return ty;
   }
+
+  if (consume_kind(TK_CHAR)) {
+    // 型
+    Type *ty = new_type(CHAR, NULL, 0);
+
+    // ポインタ?
+    while (consume("*")) {
+      Type *t = new_type(PTR, ty, 0);
+      ty = t;
+    }
+
+    return ty;
+  }
+
   return NULL;
 }
 

@@ -29,6 +29,8 @@ static void gen_gval(Node *node) {
 // ローカル変数に対する加算
 static void add_lvar(Node *node) {
   switch (node->lhs->lvar->ty->kind) {
+  case CHAR:
+    // fallthrough
   case INT:
     printf("  add rax, rdi\n");
     break;
@@ -46,6 +48,8 @@ static void add_lvar(Node *node) {
 // ローカル変数に対する減算
 static void sub_lvar(Node *node) {
   switch (node->lhs->lvar->ty->kind) {
+  case CHAR:
+    // fallthrough
   case INT:
     printf("  sub rax, rdi\n");
     break;
@@ -75,21 +79,49 @@ void gen(Node *node) {
   case ND_LVAR:
     debug_comment("ND_LVAR");
     gen_lval(node);
-    printf("  pop rax\n");
-    // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
-    if (node->lvar->ty->kind != ARRAY) {
+    switch (node->lvar->ty->kind) {
+    case CHAR:
+      printf("  pop rax\n");
+      printf("  movsx rax, [rax]\n");
+      printf("  push rax\n");
+      break;
+    case INT:
+      // fallthrough
+    case PTR:
+      printf("  pop rax\n");
       printf("  mov rax, [rax]\n");
+      printf("  push rax\n");
+      break;
+    case ARRAY:
+      // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
+      break;
+    default:
+      error("不明な型の変数が見つかりました");
+      break;
     }
-    printf("  push rax\n");
     return;
   case ND_GVAR:
     debug_comment("ND_GVAR");
     gen_gval(node);
 
-    if (node->gvar->ty->kind != ARRAY) {
+    switch (node->gvar->ty->kind) {
+    case CHAR:
+      printf("  pop rax\n");
+      printf("  movsx rax, [rax]\n");
+      printf("  push rax\n");
+      break;
+    case INT:
+    case PTR:
       printf("  pop rax\n");
       printf("  mov rax, [rax]\n");
       printf("  push rax\n");
+      break;
+    case ARRAY:
+      // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
+      break;
+    default:
+      error("不明な型の変数が見つかりました");
+      break;
     }
     return;
   case ND_ASSIGN:
@@ -103,10 +135,31 @@ void gen(Node *node) {
     }
     gen(node->rhs);
 
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
-    printf("  mov [rax], rdi\n");
-    printf("  push rdi\n");
+    Type *ty = type_of(node->lhs);
+    if (!ty) {
+      error("不正な代入式ですよ");
+    }
+    switch (ty->kind) {
+    case CHAR:
+      printf("  pop rdi\n");
+      printf("  pop rax\n");
+      printf("  mov [rax], dil\n");
+      printf("  push rdi\n");
+      break;
+    case INT:
+      // fallthrough
+    case ARRAY:
+      // fallthrough
+    case PTR:
+      printf("  pop rdi\n");
+      printf("  pop rax\n");
+      printf("  mov [rax], rdi\n");
+      printf("  push rdi\n");
+      break;
+    default:
+      error("不正な代入式です");
+      break;
+    }
     return;
   case ND_RETURN:
     debug_comment("ND_RETURN");
@@ -253,9 +306,10 @@ void gen(Node *node) {
     unsigned int lvar_size = 0;
     for (LVar *p = locals; p; p = p->next) {
       switch (p->ty->kind) {
+      case CHAR:
+        // fallthrough
       case INT:
-        lvar_size += 8;
-        break;
+        // fallthrough
       case PTR:
         lvar_size += 8;
         break;
