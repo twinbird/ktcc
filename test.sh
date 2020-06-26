@@ -138,6 +138,7 @@ assert 3 'int main() { int a[2]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p 
 assert 3 'int main() { int a[2]; a[0] = 1; a[1] = 2; return a[0] + a[1];}'
 assert 3 'int x; int y[20]; int main() { y[0] = 1; y[1] = 2; x = y[0] + y[1]; return x;}'
 assert 1 'int x; int foo() { int x; x = 1; return x; } int main() { x = 3; return foo();}'
+assert 3 'int x; int main() { x = 1; int y; int z; y = 1; z = 1; return x + y + z; }'
 assert 3 'int main() { char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y; }'
 
 echo OK
