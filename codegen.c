@@ -82,7 +82,7 @@ void gen(Node *node) {
     switch (node->lvar->ty->kind) {
     case CHAR:
       printf("  pop rax\n");
-      printf("  movsx rax, [rax]\n");
+      printf("  movsx rax, BYTE PTR [rax]\n");
       printf("  push rax\n");
       break;
     case INT:
@@ -107,7 +107,7 @@ void gen(Node *node) {
     switch (node->gvar->ty->kind) {
     case CHAR:
       printf("  pop rax\n");
-      printf("  movsx rax, [rax]\n");
+      printf("  movsx rax, BYTE PTR [rax]\n");
       printf("  push rax\n");
       break;
     case INT:
