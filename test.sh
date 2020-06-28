@@ -5,7 +5,8 @@ assert() {
   input="$2"
 
   ./ktcc "$input" > tmp.s
-  cc -o tmp tmp.s
+  as -o mylibc.o mylibc.s
+  cc -o tmp tmp.s mylibc.o
   ./tmp
   actual="$?"
 
@@ -143,5 +144,6 @@ assert 3 'int main() { char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0]
 assert 3 'char x; int main() { x = 1; int y; char z; y = 1; z = 1; return x + y + z; }'
 assert 48 "int main() { char a; a = '0'; return a; }"
 assert 9 "int main() { char a; a = '\t'; return a; }"
+assert 1 "int main() { char c; c = 'a'; return write(1, &c, 1); }"
 
 echo OK
