@@ -139,7 +139,7 @@ extern Node *funcs[100];
 
 // エラーレポート関数
 extern void error_at(char *loc, char *fmt, ...);
-void error(char *msg);
+void error(char *fmt, ...);
 
 // コード生成して標準出力へ出力
 extern void gen(Node *node);
