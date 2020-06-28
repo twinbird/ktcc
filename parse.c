@@ -95,6 +95,57 @@ static bool is_word(char *p, char *word) {
   return false;
 }
 
+// TK_CHARのtokenの文字コードを返す
+static int char_code(Token *tok) {
+  // 3文字なら普通の文字コード
+  if (tok->len == 3) {
+    return tok->str[1];
+  }
+
+  // その他はエスケープシーケンス扱い
+  switch (tok->str[2]) {
+  case 'a':
+    return '\a';
+    break;
+  case 'b':
+    return '\b';
+    break;
+  case 'n':
+    return '\n';
+    break;
+  case 'r':
+    return '\r';
+    break;
+  case 'f':
+    return '\f';
+    break;
+  case 't':
+    return '\t';
+    break;
+  case 'v':
+    return '\v';
+    break;
+  case '\\':
+    return '\\';
+    break;
+  case '?':
+    return '\?';
+    break;
+  case '\'':
+    return '\'';
+    break;
+  case '"':
+    return '\"';
+    break;
+  case '0':
+    return '\0';
+    break;
+  default:
+    error("未対応のエスケープシーケンスです");
+    break;
+  }
+}
+
 // 入力文字列pをトークナイズして返す
 Token *tokenize() {
   char *p = user_input;
@@ -186,6 +237,18 @@ Token *tokenize() {
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p, 0);
       cur->val = strtol(p, &p, 10);
+      continue;
+    }
+
+    if (*p == '\'') {
+      int len = 3; // 'x' で3文字
+      // エスケープシーケンスならもう1文字取得
+      if (*(p + 1) == '\\') {
+        len++;
+      }
+
+      cur = new_token(TK_CHAR, cur, p, len);
+      p += len;
       continue;
     }
 
@@ -349,6 +412,11 @@ static Node *primary() {
 
       return var_node;
     }
+  }
+
+  tok = consume_kind(TK_CHAR);
+  if (tok) {
+    return new_node_num(char_code(tok));
   }
 
   return new_node_num(expect_number());

@@ -141,5 +141,7 @@ assert 1 'int x; int foo() { int x; x = 1; return x; } int main() { x = 3; retur
 assert 3 'int x; int main() { x = 1; int y; int z; y = 1; z = 1; return x + y + z; }'
 assert 3 'int main() { char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y; }'
 assert 3 'char x; int main() { x = 1; int y; char z; y = 1; z = 1; return x + y + z; }'
+assert 48 "int main() { char a; a = '0'; return a; }"
+assert 9 "int main() { char a; a = '\t'; return a; }"
 
 echo OK
