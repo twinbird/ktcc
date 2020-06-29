@@ -4,3 +4,4 @@ tmp*
 a.out
 ktcc
 todo.txt
+playground/*.c

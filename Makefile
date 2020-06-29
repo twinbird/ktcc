@@ -7,6 +7,12 @@ ktcc: $(OBJS)
 
 $(OBJS): ktcc.h
 
+run: ktcc
+	./ktcc "playground/test.c" > tmp.s
+	as -o mylibc.o mylibc.s
+	cc -o tmp tmp.s mylibc.o
+	./tmp
+
 test: ktcc
 	./test.sh
 

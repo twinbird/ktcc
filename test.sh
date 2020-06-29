@@ -1,149 +1,59 @@
 #!/bin/bash
 
-assert() {
+assert_exit() {
   expected="$1"
-  input="$2"
+  file="$2"
 
-  ./ktcc "$input" > tmp.s
+  ./ktcc "$file" > tmp.s
   as -o mylibc.o mylibc.s
   cc -o tmp tmp.s mylibc.o
   ./tmp
   actual="$?"
 
   if [ "$actual" = "$expected" ]; then
-    echo "$input => $actual"
+    echo "[$file] => [OK]"
   else
-    echo "$input => $expected expected, but got $actual"
+    echo "[$file] => $expected expected, but got $actual"
     exit 1
   fi
 }
 
-assert_ptr() {
+assert_out() {
   expected="$1"
-  input="$2"
+  file="$2"
 
-  ./ktcc "$input" > tmp.s
-  cc -S test_ptr.c -o tmp2.s
-  cc -o tmp tmp.s tmp2.s
-  ./tmp
-  actual="$?"
+  ./ktcc "$file" > tmp.s
+  as -o mylibc.o mylibc.s
+  cc -o tmp tmp.s mylibc.o
+  actual=`./tmp`
 
   if [ "$actual" = "$expected" ]; then
-    echo "$input => $actual"
+    echo "[$file] => [OK]"
   else
-    echo "$input => $expected expected, but got $actual"
+    echo "[$file] => '$expected' expected, but got '$actual'"
     exit 1
   fi
 }
 
-assert 0 'int main() { return 0; }'
-assert 42 'int main() { return 42; }'
-assert 21 "int main() { return 5+20-4; }"
-assert 41 " int main() { return 12 + 34 - 5 ; }"
-assert 47 'int main() { return 5+6*7; }'
-assert 15 'int main() { return 5*(9-6); }'
-assert 4 'int main() { return (3+5)/2; }'
-assert 7 'int main() { return -3+10; }'
-assert 15 'int main() { return -(-3*+5); }'
-assert 1 'int main(){return 1==1;}'
-assert 0 'int main() { return 1==0;}'
-assert 1 'int main() { return 1 == 1; }'
-assert 0 'int main() { return 1 == 0; } '
-assert 1 'int main() { return 1 != 0; } '
-assert 0 'int main() { return 0 != 0; }'
-assert 1 'int main() { return 0 < 1; }'
-assert 0 'int main() { return 1 < 0;}'
-assert 1 'int main(){return 0 <= 0;}'
-assert 0 'int main() { return 0 <= -1; }'
-assert 1 'int main() { return 1 > 0;}'
-assert 0 'int main() { return 1 > 1;}'
-assert 1 'int main() { return 1 >= 1;}'
-assert 0 'int main() { return 1 >= 2;}'
-assert 3 'int main() { int a; return a = 3;}'
-assert 22 'int main() { return 5 * 6 - 8;}'
-assert 14 'int main() { int a; int b; a = 3; b = 5 * 6 - 8; return a + b / 2; }'
-assert 5 'int main() { int bar; return bar = 2 + 3; }'
-assert 6 'int main() { int foo; int bar; foo = 1; bar = 2 + 3; return foo + bar; }'
-assert 5 'int main() { int a; int b; a = 1; return 5; b = 3; }'
-assert 1 'int main() { if (1 > 0) return 1; return 2; }'
-assert 2 'int main() { if (1 < 0) return 1; return 2; }'
-assert 3 'int main() {
-            if (1 > 0)
-              if (2 > 0)
-                return 3;
-          }'
-assert 2 'int main() {
-            if (1 < 0)
-              return 1;
-            else
-              return 2;
-          }'
-assert 3 'int main() {
-            int i;
-            i = 0;
-            while (i < 3) 
-              i = i + 1;
-            return i;
-          }'
-assert 4 'int main() {
-            int i;
-            i = 0;
-            while (i = i + 1)
-              if (i == 4)
-                return i;
-          }'
-assert 0 'int main() {
-            int i;
-            i = 0;
-            while (0)
-              return i + 1;
-            return i;
-          }'
-assert 3 'int main() {
-            int i;
-            for (i = 0; i < 3; i = i + 1)
-              1;
-            return i;
-          }'
-assert 6 'int main() {
-            int i;
-            int ret;
-            ret = 0;
-            for (i = 0; i < 4; i = i + 1) {
-              ret = ret + i;
-            }
-            return ret;
-          }'
-assert 4 'int foo() {
-            return 2;
-          }
-          int main() {
-            return foo() + foo();
-          }'
-assert 1 'int foo() { return 1; } int main() { return foo(); }'
-assert 2 'int foo(int a) { return 1 + a; } int main() { return foo(1); }'
-assert 4 'int bar(int a, int b) { return 1 + a + b; } int main() { return bar(1, 2); }'
-assert 21 'int foo(int a, int b, int c, int d, int e, int f) { return a+b+c+d+e+f; } int main() { return foo(1,2,3,4,5,6);}'
-assert 5 'int fib(int n) { if (n == 1) return 1; if (n == 2) return 1; return fib(n-2) + fib(n-1);} int main() {return fib(5); }'
-assert 3 'int main() { int x; int y; x = 3; y = &x; return *y; }'
-assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x; }'
-assert_ptr 10 'int main() { int sum; int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 1; sum = *q; q = q + 2; sum = sum + *q; return sum; } '
-assert_ptr 9 'int main() { int sum; int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p; sum = *q; q = q + 3; sum = sum + *q; return sum; } '
-assert 4 'int main() { int x; return sizeof(x); }'
-assert 8 'int main() { int *x; return sizeof(x); }'
-assert 4 'int main() { int x; return sizeof(x + 3); }'
-assert 4 'int main() { return sizeof(3); }'
-assert 4 'int main() { int *x; return sizeof(*x); }'
-assert 1 'int main() { int a[10]; return 1; }'
-assert 3 'int main() { int a[2]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p+1);}'
-assert 3 'int main() { int a[2]; a[0] = 1; a[1] = 2; return a[0] + a[1];}'
-assert 3 'int x; int y[20]; int main() { y[0] = 1; y[1] = 2; x = y[0] + y[1]; return x;}'
-assert 1 'int x; int foo() { int x; x = 1; return x; } int main() { x = 3; return foo();}'
-assert 3 'int x; int main() { x = 1; int y; int z; y = 1; z = 1; return x + y + z; }'
-assert 3 'int main() { char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y; }'
-assert 3 'char x; int main() { x = 1; int y; char z; y = 1; z = 1; return x + y + z; }'
-assert 48 "int main() { char a; a = '0'; return a; }"
-assert 9 "int main() { char a; a = '\t'; return a; }"
-assert 1 "int main() { char c; c = 'a'; return write(1, &c, 1); }"
+assert_exit 42 tests/exit_code.c
+assert_exit 21 tests/plus_minus.c
+assert_exit 47 tests/multiple.c
+assert_exit 15 tests/parentheses.c
+assert_exit 4 tests/divide.c
+assert_exit 22 tests/minus_sign.c
+assert_exit 6 tests/compare.c
+assert_exit 14 tests/variable.c
+assert_exit 4 tests/if.c
+assert_exit 3 tests/while.c
+assert_exit 6 tests/for.c
+assert_exit 26 tests/function.c
+assert_exit 3 tests/addr_ptr.c
+assert_exit 3 tests/array_ptr.c
+assert_exit 3 tests/array.c
+assert_exit 20 tests/sizeof.c
+assert_exit 3 tests/global_variable.c
+assert_exit 8 tests/variable_scope.c
+assert_exit 56 tests/char.c
+assert_out 'Hello, world' tests/write.c
 
 echo OK
