@@ -247,7 +247,7 @@ Token *tokenize() {
         len++;
       }
 
-      cur = new_token(TK_CHAR, cur, p, len);
+      cur = new_token(TK_CHARACTER, cur, p, len);
       p += len;
       continue;
     }
@@ -414,7 +414,7 @@ static Node *primary() {
     }
   }
 
-  tok = consume_kind(TK_CHAR);
+  tok = consume_kind(TK_CHARACTER);
   if (tok) {
     return new_node_num(char_code(tok));
   }

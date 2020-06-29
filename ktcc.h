@@ -17,18 +17,19 @@ extern List *list_add(List *l, void *data);
 
 // トークンの種類
 typedef enum {
-  TK_RESERVED, // 記号
-  TK_IDENT,    // 識別子
-  TK_NUM,      // 整数トークン
-  TK_RETURN,   // 予約語:return
-  TK_IF,       // 予約語:if
-  TK_ELSE,     // 予約語:else
-  TK_WHILE,    // 予約語:while
-  TK_FOR,      // 予約語:for
-  TK_EOF,      // 入力終わりを示すトークン
-  TK_INT,      // 予約語:int
-  TK_CHAR,     // 予約語:char
-  TK_SIZEOF,   // 予約語:sizeof
+  TK_RESERVED,  // 記号
+  TK_IDENT,     // 識別子
+  TK_NUM,       // 整数トークン
+  TK_CHARACTER, // 文字トークン
+  TK_RETURN,    // 予約語:return
+  TK_IF,        // 予約語:if
+  TK_ELSE,      // 予約語:else
+  TK_WHILE,     // 予約語:while
+  TK_FOR,       // 予約語:for
+  TK_EOF,       // 入力終わりを示すトークン
+  TK_INT,       // 予約語:int
+  TK_CHAR,      // 予約語:char
+  TK_SIZEOF,    // 予約語:sizeof
 } TokenKind;
 
 // トークン
