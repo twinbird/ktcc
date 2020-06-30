@@ -62,5 +62,6 @@ assert_exit 8 tests/variable_scope.c
 assert_exit 56 tests/char.c
 assert_out 'Hello, world' tests/write.c
 assert_exit 101 tests/str_literal.c
+assert_exit 1 tests/comment.c
 
 echo OK

@@ -162,6 +162,24 @@ Token *tokenize() {
       continue;
     }
 
+    if (strncmp(p, "//", 2) == 0) {
+      p += 2;
+      while (*p != '\n') {
+        p++;
+      }
+      continue;
+    }
+
+    if (strncmp(p, "/*", 2) == 0) {
+      p += 2;
+      char *q = strstr(p, "*/");
+      if (!q) {
+        error_at(p, "コメントが閉じられていません");
+      }
+      p = q + 2;
+      continue;
+    }
+
     if (startswith(p, "==") || startswith(p, "!=") || startswith(p, "<=") ||
         startswith(p, ">=")) {
       cur = new_token(TK_RESERVED, cur, p, 2);
