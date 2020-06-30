@@ -1,12 +1,18 @@
 #!/bin/bash
 
-assert_exit() {
+function compile() {
+  ./ktcc "$file" > tmp.s
+	./ktcc "mylibc/mylibc.c" > tmp_mylibc.s
+	as -o mylibc.o mylibc/mylibc_asm.s tmp_mylibc.s
+	cc -o tmp tmp.s mylibc.o
+}
+
+function assert_exit() {
   expected="$1"
   file="$2"
 
-  ./ktcc "$file" > tmp.s
-  as -o mylibc.o mylibc.s
-  cc -o tmp tmp.s mylibc.o
+  compile $file
+
   ./tmp
   actual="$?"
 
@@ -18,13 +24,13 @@ assert_exit() {
   fi
 }
 
-assert_out() {
+function assert_out() {
   expected="$1"
   file="$2"
 
-  ./ktcc "$file" > tmp.s
-  as -o mylibc.o mylibc.s
-  cc -o tmp tmp.s mylibc.o
+  compile $file
+
+  ./tmp
   actual=`./tmp`
 
   if [ "$actual" = "$expected" ]; then
