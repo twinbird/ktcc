@@ -10,3 +10,14 @@ int strlen(char *str) {
   return n;
 }
 
+int puts(char *str) {
+  int n;
+  n = strlen(str);
+  if (write(1, str, n) < 0) {
+    return -1;
+  }
+  if (putchar('\0') < 0) {
+    return -1;
+  }
+  return 0;
+}
