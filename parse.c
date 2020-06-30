@@ -22,6 +22,9 @@ LVar *locals;
 // グローバル変数のリスト
 GVar *globals;
 
+// 文字列リテラルのリスト
+StrLiteral *str_literals;
+
 // 次のトークンが期待している記号の時には、
 // トークンを1つ読み進めてtrue.その他はfalse
 static bool consume(char *op) {
@@ -252,6 +255,18 @@ Token *tokenize() {
       continue;
     }
 
+    if (*p == '"') {
+      char *q = p + 1;
+      int len = 2; // ""で2文字
+      while (*q != '"') {
+        q++;
+        len++;
+      }
+      cur = new_token(TK_STRING, cur, p, len);
+      p += len;
+      continue;
+    }
+
     error_at(p, "トークナイズできません");
   }
 
@@ -271,6 +286,13 @@ static Node *new_node_num(int val) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_NUM;
   node->val = val;
+  return node;
+}
+
+static Node *new_node_str_literal(StrLiteral *literal) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_STR_LITERAL;
+  node->str_literal = literal;
   return node;
 }
 
@@ -294,6 +316,15 @@ static GVar *new_gvar(GVar *list, Token *tok, Type *ty) {
   gvar->ty = ty;
 
   return gvar;
+}
+
+static StrLiteral *new_str_literal(StrLiteral *list, Token *tok) {
+  StrLiteral *str = calloc(1, sizeof(StrLiteral));
+  str->next = list;
+  str->str = tok->str + 1; // "の次から
+  str->len = tok->len - 2; //  ""の分を省く
+
+  return str;
 }
 
 static Type *new_type(TypeKind kind, Type *ptr_to, int array_size) {
@@ -417,6 +448,12 @@ static Node *primary() {
   tok = consume_kind(TK_CHARACTER);
   if (tok) {
     return new_node_num(char_code(tok));
+  }
+
+  tok = consume_kind(TK_STRING);
+  if (tok) {
+    str_literals = new_str_literal(str_literals, tok);
+    return new_node_str_literal(str_literals);
   }
 
   return new_node_num(expect_number());

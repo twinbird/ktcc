@@ -53,6 +53,9 @@ int main(int argc, char **argv) {
 
   printf(".text\n");
   printf(".globl main\n");
+
+  gen_str_literal_data(str_literals, 0);
+
   for (int i = 0; funcs[i]; i++) {
     gen(funcs[i]);
   }

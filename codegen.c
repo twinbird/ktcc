@@ -1,5 +1,7 @@
 #include "ktcc.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // 分岐ラベルを作成するための通し番号
 static unsigned long branch_serial_no = 0;
@@ -21,8 +23,12 @@ static void gen_gval(Node *node) {
   char label[MAX_VARIABLE_NAME_LENGTH];
   snprintf(label, node->gvar->len + 1, "%s", node->gvar->name);
 
-  // printf("  mov rax, %s\n", label);
   printf("  lea rax, %s[rip]\n", label);
+  printf("  push rax\n");
+}
+
+static void gen_str_literal(Node *node) {
+  printf("  lea rax, %s[rip]\n", node->str_literal->label);
   printf("  push rax\n");
 }
 
@@ -124,14 +130,20 @@ void gen(Node *node) {
       break;
     }
     return;
+  case ND_STR_LITERAL:
+    debug_comment("ND_STR_LITERAL");
+    gen_str_literal(node);
+    return;
   case ND_ASSIGN:
     debug_comment("ND_ASSIGN");
     if (node->lhs->kind == ND_DEREF) {
       gen(node->lhs->lhs);
     } else if (node->lhs->kind == ND_LVAR) {
       gen_lval(node->lhs);
-    } else {
+    } else if (node->lhs->kind == ND_GVAR) {
       gen_gval(node->lhs);
+    } else {
+      gen_str_literal(node->lhs);
     }
     gen(node->rhs);
 
@@ -426,3 +438,21 @@ void gen_global(GVar *globals) {
   return;
 }
 
+void gen_str_literal_data(StrLiteral *literals, int count) {
+  if (!literals) {
+    return;
+  }
+
+  // 16 = ".LC" + count(max 12 chars) + NULL
+  literals->label = calloc(1, 16);
+  snprintf(literals->label, 16, ".LC%d", count);
+
+  char *val = calloc(1, literals->len + 1);
+  memcpy(val, literals->str, literals->len);
+  val[literals->len] = '\0';
+
+  printf("%s:\n", literals->label);
+  printf("  .string \"%s\"\n", val);
+
+  return gen_str_literal_data(literals->next, count + 1);
+}

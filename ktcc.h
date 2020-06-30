@@ -21,6 +21,7 @@ typedef enum {
   TK_IDENT,     // 識別子
   TK_NUM,       // 整数トークン
   TK_CHARACTER, // 文字トークン
+  TK_STRING,    // 文字列トークン
   TK_RETURN,    // 予約語:return
   TK_IF,        // 予約語:if
   TK_ELSE,      // 予約語:else
@@ -78,29 +79,40 @@ struct GVar {
 };
 extern GVar *globals;
 
+// 文字列定数
+typedef struct StrLiteral StrLiteral;
+struct StrLiteral {
+  StrLiteral *next; // 次の変数かNULL
+  char *str;        // 文字列
+  int len;          // 文字列の長さ
+  char *label;      // アセンブリコードのラベル
+};
+extern StrLiteral *str_literals;
+
 // 抽象構文木ノードの種類
 typedef enum {
-  ND_ADD,      // +
-  ND_SUB,      // -
-  ND_MUL,      // *
-  ND_DIV,      // /
-  ND_EQ,       // ==
-  ND_NE,       // !=
-  ND_LT,       // <と>
-  ND_LE,       // <=と>=
-  ND_ASSIGN,   // =
-  ND_LVAR,     // ローカル変数
-  ND_GVAR,     // グローバル変数
-  ND_NUM,      // 整数
-  ND_RETURN,   // return
-  ND_IF,       // if
-  ND_WHILE,    // while
-  ND_FOR,      // for
-  ND_BLOCK,    // { ... } で表現するブロック
-  ND_FUNC,     // 関数
-  ND_FUNC_DEF, // 関数定義
-  ND_ADDR,     // &
-  ND_DEREF,    // *
+  ND_ADD,         // +
+  ND_SUB,         // -
+  ND_MUL,         // *
+  ND_DIV,         // /
+  ND_EQ,          // ==
+  ND_NE,          // !=
+  ND_LT,          // <と>
+  ND_LE,          // <=と>=
+  ND_ASSIGN,      // =
+  ND_LVAR,        // ローカル変数
+  ND_GVAR,        // グローバル変数
+  ND_STR_LITERAL, // 文字列リテラル
+  ND_NUM,         // 整数
+  ND_RETURN,      // return
+  ND_IF,          // if
+  ND_WHILE,       // while
+  ND_FOR,         // for
+  ND_BLOCK,       // { ... } で表現するブロック
+  ND_FUNC,        // 関数
+  ND_FUNC_DEF,    // 関数定義
+  ND_ADDR,        // &
+  ND_DEREF,       // *
 } NodeKind;
 
 // 抽象構文木のノード
@@ -124,6 +136,7 @@ struct Node {
   Node *func_body;                              // 関数本体
   Type *return_type;                            // 関数の戻り値の型
   LVar *locals; // 関数定義内の変数(kind: ND_FUNC_DEFの場合)
+  StrLiteral *str_literal; // 文字列リテラル(kind: ND_STR_LITERALの場合)
 };
 
 // 現在着目しているトークン
@@ -146,7 +159,10 @@ void error(char *fmt, ...);
 extern void gen(Node *node);
 
 // グローバル変数のコードを生成して標準出力へ出力
-extern void gen_global();
+extern void gen_global(GVar *globals);
+
+// 文字列定数のコードを生成して標準出力へ出力
+extern void gen_str_literal_data(StrLiteral *literals, int count);
 
 // 標準入力文字列をトークナイズする
 extern Token *tokenize();
