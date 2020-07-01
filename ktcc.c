@@ -51,6 +51,9 @@ int main(int argc, char **argv) {
   printf(".bss\n");
   gen_global(globals);
 
+  printf(".data\n");
+  gen_init_global(globals);
+
   printf(".text\n");
   printf(".globl main\n");
 

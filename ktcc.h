@@ -76,6 +76,7 @@ struct GVar {
   Type *ty;   // 変数の型
   char *name; // 変数名
   int len;    // 変数名の長さ
+  int initv;  // スカラーの初期値
 };
 extern GVar *globals;
 
@@ -158,8 +159,11 @@ void error(char *fmt, ...);
 // コード生成して標準出力へ出力
 extern void gen(Node *node);
 
-// グローバル変数のコードを生成して標準出力へ出力
+// 初期化されていないグローバル変数のコードを生成して標準出力へ出力
 extern void gen_global(GVar *globals);
+
+// 初期化されるグローバル変数のコードを生成して標準出力へ出力
+extern void gen_init_global(GVar *globals);
 
 // 文字列定数のコードを生成して標準出力へ出力
 extern void gen_str_literal_data(StrLiteral *literals, int count);

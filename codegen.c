@@ -427,13 +427,32 @@ void gen_global(GVar *globals) {
     return;
   }
 
-  char label[MAX_VARIABLE_NAME_LENGTH];
-  snprintf(label, globals->len + 1, "%s", globals->name);
+  if (!globals->initv) {
+    char label[MAX_VARIABLE_NAME_LENGTH];
+    snprintf(label, globals->len + 1, "%s", globals->name);
 
-  printf("%s:\n", label);
-  printf("  .zero %d\n", alloc_size(globals->ty));
+    printf("%s:\n", label);
+    printf("  .zero %d\n", alloc_size(globals->ty));
+  }
 
   gen_global(globals->next);
+  return;
+}
+
+void gen_init_global(GVar *globals) {
+  if (!globals) {
+    return;
+  }
+
+  if (globals->initv) {
+    char label[MAX_VARIABLE_NAME_LENGTH];
+    snprintf(label, globals->len + 1, "%s", globals->name);
+
+    printf("%s:\n", label);
+    printf("  .long %d\n", globals->initv);
+  }
+
+  gen_init_global(globals->next);
   return;
 }
 
