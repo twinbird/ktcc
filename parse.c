@@ -338,13 +338,12 @@ static LVar *new_lvar(LVar *list, Token *tok, Type *ty, bool is_arg) {
   return lvar;
 }
 
-static GVar *new_gvar(GVar *list, Token *tok, Type *ty, int init) {
+static GVar *new_gvar(GVar *list, Token *tok, Type *ty) {
   GVar *gvar = calloc(1, sizeof(GVar));
   gvar->next = list;
   gvar->name = tok->str;
   gvar->len = tok->len;
   gvar->ty = ty;
-  gvar->initv = init;
 
   return gvar;
 }
@@ -761,12 +760,16 @@ void gvar_def(Type *ty, Token *ident) {
     Type *nt = new_type(ARRAY, ty, n);
     ty = nt;
   }
-  int init = 0;
+  globals = new_gvar(globals, ident, ty);
   if (consume("=")) {
-    init = expect_number();
+    Token *tok = consume_kind(TK_CHARACTER);
+    if (tok) {
+      globals->init_char = (char_code(tok));
+    } else {
+      globals->init_int = expect_number();
+    }
   }
   expect(";");
-  globals = new_gvar(globals, ident, ty, init);
 }
 
 void program() {

@@ -72,11 +72,12 @@ extern LVar *locals;
 // グローバル変数
 typedef struct GVar GVar;
 struct GVar {
-  GVar *next; // 次の変数かNULL
-  Type *ty;   // 変数の型
-  char *name; // 変数名
-  int len;    // 変数名の長さ
-  int initv;  // スカラーの初期値
+  GVar *next;     // 次の変数かNULL
+  Type *ty;       // 変数の型
+  char *name;     // 変数名
+  int len;        // 変数名の長さ
+  int init_int;   // intの初期値
+  char init_char; // charの初期値
 };
 extern GVar *globals;
 
