@@ -187,6 +187,18 @@ Token *tokenize() {
       continue;
     }
 
+    if (strncmp(p, "++", 2) == 0) {
+      cur = new_token(TK_RESERVED, cur, p, 2);
+      p += 2;
+      continue;
+    }
+
+    if (strncmp(p, "--", 2) == 0) {
+      cur = new_token(TK_RESERVED, cur, p, 2);
+      p += 2;
+      continue;
+    }
+
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
         *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=' ||
         *p == '{' || *p == '}' || *p == ',' || *p == '&' || *p == '[' ||
@@ -405,6 +417,7 @@ static GVar *find_gvar(Token *tok) {
 }
 
 static Node *expr();
+static Node *assign();
 
 static Node *primary() {
   if (consume("(")) {
@@ -499,6 +512,16 @@ static Node *size_of_expr(Node *n) {
 static Node *unary() {
   if (consume_kind(TK_SIZEOF)) {
     return size_of_expr(unary());
+  }
+  if (consume("++")) {
+    Node *operand = primary();
+    Node *node = new_node(ND_ADD, new_node_num(1), operand);
+    return new_node(ND_ASSIGN, operand, node);
+  }
+  if (consume("--")) {
+    Node *operand = primary();
+    Node *node = new_node(ND_SUB, operand, new_node_num(1));
+    return new_node(ND_ASSIGN, operand, node);
   }
   if (consume("+")) {
     return primary();

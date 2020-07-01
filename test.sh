@@ -63,5 +63,6 @@ assert_exit 56 tests/char.c
 assert_out 'Hello, world' tests/write.c
 assert_exit 101 tests/str_literal.c
 assert_exit 1 tests/comment.c
+assert_exit 4 tests/inc_dec.c
 
 echo OK
