@@ -231,7 +231,6 @@ void gen(Node *node) {
     while (l) {
       gen(l->data);
       l = l->next;
-      printf("  pop rax\n");
     }
     return;
   case ND_FUNC:
