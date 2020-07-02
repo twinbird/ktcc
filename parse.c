@@ -181,19 +181,9 @@ Token *tokenize() {
     }
 
     if (startswith(p, "==") || startswith(p, "!=") || startswith(p, "<=") ||
-        startswith(p, ">=")) {
-      cur = new_token(TK_RESERVED, cur, p, 2);
-      p += 2;
-      continue;
-    }
-
-    if (strncmp(p, "++", 2) == 0) {
-      cur = new_token(TK_RESERVED, cur, p, 2);
-      p += 2;
-      continue;
-    }
-
-    if (strncmp(p, "--", 2) == 0) {
+        startswith(p, ">=") || startswith(p, "++") || startswith(p, "--") ||
+        startswith(p, "+=") || startswith(p, "-=") || startswith(p, "*=") ||
+        startswith(p, "/=")) {
       cur = new_token(TK_RESERVED, cur, p, 2);
       p += 2;
       continue;
@@ -616,6 +606,22 @@ static Node *equality() {
 
 static Node *assign() {
   Node *node = equality();
+  if (consume("+=")) {
+    Node *add_node = new_node(ND_ADD, node, assign());
+    node = new_node(ND_ASSIGN, node, add_node);
+  }
+  if (consume("-=")) {
+    Node *sub_node = new_node(ND_SUB, node, assign());
+    node = new_node(ND_ASSIGN, node, sub_node);
+  }
+  if (consume("*=")) {
+    Node *mul_node = new_node(ND_MUL, node, assign());
+    node = new_node(ND_ASSIGN, node, mul_node);
+  }
+  if (consume("/=")) {
+    Node *div_node = new_node(ND_DIV, node, assign());
+    node = new_node(ND_ASSIGN, node, div_node);
+  }
   if (consume("=")) {
     node = new_node(ND_ASSIGN, node, assign());
   }
