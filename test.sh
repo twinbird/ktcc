@@ -65,5 +65,6 @@ assert_exit 101 tests/str_literal.c
 assert_exit 1 tests/comment.c
 assert_exit 4 tests/inc_dec.c
 assert_exit 2 tests/assign.c
+assert_exit 2 tests/initializer.c
 
 echo OK

@@ -698,10 +698,19 @@ static Node *stmt() {
     }
 
     locals = new_lvar(locals, tok, ty, false);
-    expect(";");
 
     Node *node = new_node(ND_LVAR, NULL, NULL);
     node->lvar = locals;
+
+    // 初期化式
+    if (consume("=")) {
+      node = new_node(ND_ASSIGN, node, equality());
+      expect(";");
+      return node;
+    }
+
+    expect(";");
+
     return node;
   }
 
