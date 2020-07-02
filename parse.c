@@ -509,17 +509,32 @@ static Node *size_of_expr(Node *n) {
   return size_of_expr(n->lhs);
 }
 
+static Node *postfix() {
+  Node *operand = primary();
+  if (consume("++")) {
+    Node *add_node = new_node(ND_ADD, new_node_num(1), operand);
+    Node *assign_node = new_node(ND_ASSIGN, operand, add_node);
+    operand->lhs = assign_node;
+  }
+  if (consume("--")) {
+    Node *sub_node = new_node(ND_SUB, operand, new_node_num(1));
+    Node *assign_node = new_node(ND_ASSIGN, operand, sub_node);
+    operand->lhs = assign_node;
+  }
+  return operand;
+}
+
 static Node *unary() {
   if (consume_kind(TK_SIZEOF)) {
     return size_of_expr(unary());
   }
   if (consume("++")) {
-    Node *operand = primary();
+    Node *operand = unary();
     Node *node = new_node(ND_ADD, new_node_num(1), operand);
     return new_node(ND_ASSIGN, operand, node);
   }
   if (consume("--")) {
-    Node *operand = primary();
+    Node *operand = unary();
     Node *node = new_node(ND_SUB, operand, new_node_num(1));
     return new_node(ND_ASSIGN, operand, node);
   }
@@ -536,7 +551,7 @@ static Node *unary() {
   if (consume("*")) {
     return new_node(ND_DEREF, unary(), NULL);
   }
-  return primary();
+  return postfix();
 }
 
 static Node *mul() {

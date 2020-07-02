@@ -6,7 +6,7 @@ int strlen(char *str) {
   int n;
   n = 0;
   while (*str != '\0')
-    n = n + 1;
+    n++;
   return n;
 }
 
