@@ -30,7 +30,6 @@ function assert_out() {
 
   compile $file
 
-  ./tmp
   actual=`./tmp`
 
   if [ "$actual" = "$expected" ]; then
@@ -66,5 +65,6 @@ assert_exit 1 tests/comment.c
 assert_exit 4 tests/inc_dec.c
 assert_exit 2 tests/assign.c
 assert_exit 2 tests/initializer.c
+assert_exit 1 tests/exit.c
 
 echo OK
