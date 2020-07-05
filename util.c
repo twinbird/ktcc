@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // エラーレポート関数
 void error_at(char *loc, char *fmt, ...) {
@@ -68,4 +69,16 @@ Type *type_of(Node *node) {
     return type_of(node->lhs);
     break;
   }
+}
+
+char *strndup(const char *s, size_t n) {
+  char *p = memchr(s, '\0', n);
+  if (p != NULL)
+    n = p - s;
+  p = malloc(n + 1);
+  if (p != NULL) {
+    memcpy(p, s, n);
+    p[n] = '\0';
+  }
+  return p;
 }

@@ -20,8 +20,7 @@ static void gen_gval(Node *node) {
     error("代入の左辺値が変数ではありません");
   }
 
-  char label[MAX_VARIABLE_NAME_LENGTH];
-  snprintf(label, node->gvar->len + 1, "%s", node->gvar->name);
+  char *label = strndup(node->gvar->name, node->gvar->len);
 
   printf("  lea rax, %s[rip]\n", label);
   printf("  push rax\n");
@@ -75,7 +74,8 @@ void gen(Node *node) {
   unsigned long else_no = branch_serial_no++;
   unsigned long while_no = branch_serial_no++;
   unsigned long for_no = branch_serial_no++;
-  List *l;
+  ArgsList *arg;
+  StmtsList *stmt;
 
   switch (node->kind) {
   case ND_NUM:
@@ -227,50 +227,50 @@ void gen(Node *node) {
     return;
   case ND_BLOCK:
     debug_comment("ND_BLOCK");
-    l = node->stmts;
-    while (l) {
-      gen(l->data);
-      l = l->next;
+    stmt = node->stmts;
+    while (stmt) {
+      gen(stmt->data);
+      stmt = stmt->next;
     }
     return;
   case ND_FUNC:
     debug_comment("ND_FUNC");
-    l = node->args;
-    if (l) {
-      gen(l->data);
+    arg = node->args;
+    if (arg) {
+      gen(arg->data);
       printf("  pop rax\n");
       printf("  mov rdi, rax\n");
-      l = l->next;
+      arg = arg->next;
     }
-    if (l) {
-      gen(l->data);
+    if (arg) {
+      gen(arg->data);
       printf("  pop rax\n");
       printf("  mov rsi, rax\n");
-      l = l->next;
+      arg = arg->next;
     }
-    if (l) {
-      gen(l->data);
+    if (arg) {
+      gen(arg->data);
       printf("  pop rax\n");
       printf("  mov rdx, rax\n");
-      l = l->next;
+      arg = arg->next;
     }
-    if (l) {
-      gen(l->data);
+    if (arg) {
+      gen(arg->data);
       printf("  pop rax\n");
       printf("  mov rcx, rax\n");
-      l = l->next;
+      arg = arg->next;
     }
-    if (l) {
-      gen(l->data);
+    if (arg) {
+      gen(arg->data);
       printf("  pop rax\n");
       printf("  mov r8, rax\n");
-      l = l->next;
+      arg = arg->next;
     }
-    if (l) {
-      gen(l->data);
+    if (arg) {
+      gen(arg->data);
       printf("  pop rax\n");
       printf("  mov r9, rax\n");
-      l = l->next;
+      arg = arg->next;
     }
     printf("  call %s\n", node->func_name);
     printf("  push rax\n");
@@ -428,8 +428,7 @@ void gen_global(GVar *globals) {
   }
 
   if (!globals->init_int && !globals->init_char) {
-    char label[MAX_VARIABLE_NAME_LENGTH];
-    snprintf(label, globals->len + 1, "%s", globals->name);
+    char *label = strndup(globals->name, globals->len);
 
     printf("%s:\n", label);
     printf("  .zero %d\n", alloc_size(globals->ty));
@@ -444,8 +443,7 @@ void gen_init_global(GVar *globals) {
     return;
   }
 
-  char label[MAX_VARIABLE_NAME_LENGTH];
-  snprintf(label, globals->len + 1, "%s", globals->name);
+  char *label = strndup(globals->name, globals->len);
 
   if (globals->init_int) {
     printf("%s:\n", label);

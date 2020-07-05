@@ -424,15 +424,14 @@ static Node *primary() {
       // 引数
       if (!consume(")")) {
         for (int i = 0; i < 6; i++) {
-          node->args = list_add(node->args, expr());
+          node->args = args_add(node->args, expr());
           if (!consume(",")) {
             expect(")");
             break;
           }
         }
       }
-      strncpy(node->func_name, tok->str, tok->len);
-      node->func_name[tok->len + 1] = '\0';
+      node->func_name = strndup(tok->str, tok->len);
       return node;
     } else {
       // 変数参照
@@ -718,7 +717,7 @@ static Node *stmt() {
     node = new_node(ND_BLOCK, NULL, NULL);
     node->stmts = NULL;
     while (!consume("}")) {
-      node->stmts = list_add(node->stmts, (void *)stmt());
+      node->stmts = stmts_add(node->stmts, (void *)stmt());
     }
     return node;
   }
@@ -745,8 +744,7 @@ static Node *func_def(Type *ty, Token *ident) {
 
   // 関数名
   Token *tok = ident;
-  strncpy(node->func_def_name, tok->str, tok->len);
-  node->func_def_name[tok->len] = '\0';
+  node->func_def_name = strndup(tok->str, tok->len);
 
   // 引数
   node->locals = NULL;

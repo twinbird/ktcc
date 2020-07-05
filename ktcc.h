@@ -5,16 +5,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define MAX_FUNCTION_NAME_LENGTH 255
-#define MAX_VARIABLE_NAME_LENGTH 255
-
-typedef struct List List;
-struct List {
-  List *next;
-  void *data;
-};
-extern List *list_add(List *l, void *data);
-
 // トークンの種類
 typedef enum {
   TK_RESERVED,  // 記号
@@ -117,29 +107,46 @@ typedef enum {
   ND_DEREF,       // *
 } NodeKind;
 
+typedef struct ArgsList ArgsList;
+typedef struct StmtsList StmtsList;
+
 // 抽象構文木のノード
 typedef struct Node Node;
 struct Node {
-  NodeKind kind; // ノードの型
-  Node *lhs;     // 左辺
-  Node *rhs;     // 右辺
-  int val;       // 値(kindがND_NUMの場合のみ利用する)
-  LVar *lvar;    // ローカル変数(kindがND_LVARの場合)
-  GVar *gvar;    // グローバル変数(kindがND_GVARの場合)
-  Node *init;    // 初期化式(for)
-  Node *inc;     // インクリメント式(for)
-  Node *cond;    // 条件式
-  Node *then;    // 条件式がtrueの場合の文
-  Node *els;     // 条件式がfalseの場合の文
-  List *stmts;   // ブロック内の文
-  char func_name[MAX_FUNCTION_NAME_LENGTH];     // 実行する関数名
-  List *args;                                   // 関数の引数
-  char func_def_name[MAX_FUNCTION_NAME_LENGTH]; // 関数定義名
-  Node *func_body;                              // 関数本体
-  Type *return_type;                            // 関数の戻り値の型
-  LVar *locals; // 関数定義内の変数(kind: ND_FUNC_DEFの場合)
+  NodeKind kind;       // ノードの型
+  Node *lhs;           // 左辺
+  Node *rhs;           // 右辺
+  int val;             // 値(kindがND_NUMの場合のみ利用する)
+  LVar *lvar;          // ローカル変数(kindがND_LVARの場合)
+  GVar *gvar;          // グローバル変数(kindがND_GVARの場合)
+  Node *init;          // 初期化式(for)
+  Node *inc;           // インクリメント式(for)
+  Node *cond;          // 条件式
+  Node *then;          // 条件式がtrueの場合の文
+  Node *els;           // 条件式がfalseの場合の文
+  StmtsList *stmts;    // ブロック内の文
+  char *func_name;     // 実行する関数名
+  ArgsList *args;      // 関数の引数
+  char *func_def_name; // 関数定義名
+  Node *func_body;     // 関数本体
+  Type *return_type;   // 関数の戻り値の型
+  LVar *locals;        // 関数定義内の変数(kind: ND_FUNC_DEFの場合)
   StrLiteral *str_literal; // 文字列リテラル(kind: ND_STR_LITERALの場合)
 };
+
+// 引数のリスト
+struct ArgsList {
+  ArgsList *next;
+  Node *data;
+};
+extern ArgsList *args_add(ArgsList *l, Node *data);
+
+// 文のリスト
+struct StmtsList {
+  StmtsList *next;
+  Node *data;
+};
+extern StmtsList *stmts_add(StmtsList *l, Node *data);
 
 // 現在着目しているトークン
 extern Token *token;
@@ -186,4 +193,7 @@ int type_kind_size(TypeKind kind);
 
 // ND_LVAR, ND_GVAR, ND_DEREFの示す変数の型を返す
 Type *type_of(Node *node);
+
+// 文字列をn文字コピーして末尾にNULLを入れて返す
+char *strndup(const char *s, size_t n);
 #endif
