@@ -54,6 +54,15 @@ int alloc_size(Type *ty) {
   if (ty->kind == ARRAY) {
     return ty->array_size * alloc_size(ty->ptr_to);
   }
+  if (ty->kind == STRUCT) {
+    StructMember *m = ty->members;
+    int sz = 0;
+    while (m) {
+      sz += alloc_size(m->type);
+      m = m->next;
+    }
+    return sz;
+  }
   return type_kind_size(ty->kind);
 }
 

@@ -20,6 +20,7 @@ typedef enum {
   TK_EOF,       // 入力終わりを示すトークン
   TK_INT,       // 予約語:int
   TK_CHAR,      // 予約語:char
+  TK_STRUCT,    // 予約語:struct
   TK_SIZEOF,    // 予約語:sizeof
 } TokenKind;
 
@@ -33,18 +34,34 @@ struct Token {
   int len;        // トークンの長さ
 };
 
+// 構造体のメンバ
+typedef struct StructMember StructMember;
+
 // 変数の型
 typedef enum {
   INT,
   CHAR,
   PTR,
   ARRAY,
+  STRUCT,
 } TypeKind;
 typedef struct Type Type;
 struct Type {
-  TypeKind kind;
-  struct Type *ptr_to; // ポインタの場合: 何を指す型か
-  size_t array_size;
+  Type *next;            // 次の型定義
+  TypeKind kind;         // 型の種類
+  struct Type *ptr_to;   // ポインタの場合: 何を指す型か
+  size_t array_size;     // 配列の長さ
+  char *name;            // 構造体名
+  int len;               // 構造体名の長さ
+  StructMember *members; // 構造体のメンバのリスト
+};
+extern Type *types;
+
+struct StructMember {
+  StructMember *next; // 次の構造体のメンバかNULL
+  char *name;         // メンバの名前
+  int len;            // メンバの名前の長さ
+  Type *type;         // メンバの型
 };
 
 // ローカル変数
@@ -196,4 +213,8 @@ Type *type_of(Node *node);
 
 // 文字列をn文字コピーして末尾にNULLを入れて返す
 char *strndup(const char *s, size_t n);
+
+StructMember *member_add(StructMember *list, char *name, int len, Type *t);
+Type *struct_type_add(Type *list, char *name, int len, StructMember *m);
+Type *find_type(Type *list, char *name, int len);
 #endif

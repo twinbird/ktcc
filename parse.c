@@ -22,6 +22,9 @@ LVar *locals;
 // グローバル変数のリスト
 GVar *globals;
 
+// 型定義のリスト
+Type *types;
+
 // 文字列リテラルのリスト
 StrLiteral *str_literals;
 
@@ -245,6 +248,12 @@ Token *tokenize() {
       continue;
     }
 
+    if (is_word(p, "struct")) {
+      cur = new_token(TK_STRUCT, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if ('a' <= *p && *p <= 'z') {
       int len = 0;
       char *q = p;
@@ -356,6 +365,20 @@ static Type *new_type(TypeKind kind, Type *ptr_to, int array_size) {
   return ty;
 }
 
+static Type *consume_type_prefix();
+
+static Type *struct_def(char *name, int len) {
+  StructMember *m = NULL;
+  while (!consume("}")) {
+    Type *t = consume_type_prefix();
+    Token *tok = consume_kind(TK_IDENT);
+    m = member_add(m, tok->str, tok->len, t);
+    expect(";");
+  }
+  types = struct_type_add(types, name, len, m);
+  return types;
+}
+
 // 以降のトークンが型の表現の前半部分(識別子まで)の定義の場合、トークンを消費して型を返す。
 // その他はNULL
 static Type *consume_type_prefix() {
@@ -375,6 +398,35 @@ static Type *consume_type_prefix() {
   if (consume_kind(TK_CHAR)) {
     // 型
     Type *ty = new_type(CHAR, NULL, 0);
+
+    // ポインタ?
+    while (consume("*")) {
+      Type *t = new_type(PTR, ty, 0);
+      ty = t;
+    }
+
+    return ty;
+  }
+
+  if (consume_kind(TK_STRUCT)) {
+    Token *tok = consume_kind(TK_IDENT);
+    if (!tok) {
+      error_at(tok->str, "構造体の名前指定が不正です");
+    }
+    // 定義済みの構造体を探す
+    Type *ty = find_type(types, tok->str, tok->len);
+
+    if (consume("{")) {
+      if (ty) {
+        error_at(tok->str, "定義済みの構造体です");
+      } else {
+        ty = struct_def(tok->str, tok->len);
+      }
+    }
+
+    if (!ty) {
+      error_at(tok->str, "未定義の構造体です");
+    }
 
     // ポインタ?
     while (consume("*")) {
@@ -484,7 +536,6 @@ static Node *size_of_expr(Node *n) {
   if (n->kind == ND_NUM) {
     return new_node_num(type_kind_size(INT));
   }
-
   // ND_LVARなら型によって分ける
   if (n->kind == ND_LVAR) {
     return new_node_num(alloc_size(n->lvar->ty));
@@ -806,8 +857,16 @@ void program() {
     Type *ty = consume_type_prefix();
     Token *ident = consume_kind(TK_IDENT);
 
-    if (ty == NULL || ident == NULL) {
-      error("不正な変数または関数宣言が見つかりました");
+    if (!ty) {
+      error("不正な変数または関数の定義です. 型が指定されていません");
+    }
+    // 構造体定義
+    if (ty->kind == STRUCT && !ident) {
+      expect(";");
+      continue;
+    }
+    if (!ident) {
+      error("不正な変数または関数の定義です. 識別子が指定されていません");
     }
 
     if (consume("(")) {

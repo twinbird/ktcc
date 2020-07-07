@@ -101,6 +101,9 @@ void gen(Node *node) {
     case ARRAY:
       // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
       break;
+    case STRUCT:
+      // スタックに配列の先頭のアドレスを入れたままにしておく
+      break;
     default:
       error("不明な型の変数が見つかりました");
       break;
@@ -124,6 +127,9 @@ void gen(Node *node) {
       break;
     case ARRAY:
       // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
+      break;
+    case STRUCT:
+      // スタックに配列の先頭のアドレスを入れたままにしておく
       break;
     default:
       error("不明な型の変数が見つかりました");
@@ -326,6 +332,9 @@ void gen(Node *node) {
         break;
       case ARRAY:
         lvar_size += p->ty->array_size * 8;
+        break;
+      case STRUCT:
+        lvar_size += alloc_size(p->ty);
         break;
       default:
         error("不明な型が見つかりました");
