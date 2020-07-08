@@ -195,7 +195,7 @@ Token *tokenize() {
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
         *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=' ||
         *p == '{' || *p == '}' || *p == ',' || *p == '&' || *p == '[' ||
-        *p == ']') {
+        *p == ']' || *p == '.') {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
@@ -560,6 +560,18 @@ static Node *postfix() {
     Node *sub_node = new_node(ND_SUB, operand, new_node_num(1));
     Node *assign_node = new_node(ND_ASSIGN, operand, sub_node);
     operand->lhs = assign_node;
+  }
+  if (consume(".")) {
+    if (operand->kind != ND_LVAR || operand->lvar->ty->kind != STRUCT) {
+      error("オペランドが構造体ではありません");
+    }
+    Token *tok = consume_kind(TK_IDENT);
+    if (!tok) {
+      error_at(tok->str, "識別子が指定されていません");
+    }
+    Node *ref_node = new_node(ND_MEM_REF, operand, NULL);
+    ref_node->mem_ref_name = strndup(tok->str, tok->len);
+    return ref_node;
   }
   return operand;
 }

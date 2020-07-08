@@ -6,12 +6,66 @@
 // 分岐ラベルを作成するための通し番号
 static unsigned long branch_serial_no = 0;
 
+static void ref_var(Type *ty) {
+  switch (ty->kind) {
+  case CHAR:
+    printf("  pop rax\n");
+    printf("  movsx rax, BYTE PTR [rax]\n");
+    printf("  push rax\n");
+    break;
+  case INT:
+    // fallthrough
+  case PTR:
+    printf("  pop rax\n");
+    printf("  mov rax, [rax]\n");
+    printf("  push rax\n");
+    break;
+  case ARRAY:
+    // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
+    break;
+  case STRUCT:
+    // スタックに配列の先頭のアドレスを入れたままにしておく
+    break;
+  default:
+    error("不明な型の変数が見つかりました");
+    break;
+  }
+}
+
+static int member_offset(Type *t, char *mem_name) {
+  if (t->kind != STRUCT) {
+    error("メンバ参照する変数が構造体ではありません");
+  }
+  int sz = 0;
+  StructMember *m = t->members;
+  while (m) {
+    if (!memcmp(m->name, mem_name, m->len)) {
+      m = m->next;
+      break;
+    }
+    m = m->next;
+  }
+  while (m) {
+    sz += align(alloc_size(m->type));
+    m = m->next;
+  }
+  return sz;
+}
+
 static void gen_lval(Node *node) {
   if (node->kind != ND_LVAR) {
     error("代入の左辺値が変数ではありません");
   }
   printf("  mov rax, rbp\n");
   printf("  sub rax, %d\n", node->lvar->offset);
+  printf("  push rax\n");
+}
+
+static void gen_mem_ref(Node *node) {
+  gen_lval(node->lhs);
+  printf("  pop rax\n");
+  printf("  sub rax, %d\n",
+         member_offset(node->lhs->lvar->ty, node->mem_ref_name));
   printf("  push rax\n");
 }
 
@@ -82,59 +136,28 @@ void gen(Node *node) {
     debug_comment("ND_NUM");
     printf("  push %d\n", node->val);
     return;
+  case ND_MEM_REF:
+    debug_comment("ND_MEM_REF");
+    gen_mem_ref(node);
+    Type *t = NULL;
+    if (node->lhs->kind == ND_LVAR) {
+      t = member_type(node->lhs->lvar->ty, node->mem_ref_name);
+    } else if (node->lhs->kind == ND_GVAR) {
+      t = member_type(node->lhs->gvar->ty, node->mem_ref_name);
+    } else {
+      error("構造体変数への参照ではありません");
+    }
+    ref_var(t);
+    return;
   case ND_LVAR:
     debug_comment("ND_LVAR");
     gen_lval(node);
-    switch (node->lvar->ty->kind) {
-    case CHAR:
-      printf("  pop rax\n");
-      printf("  movsx rax, BYTE PTR [rax]\n");
-      printf("  push rax\n");
-      break;
-    case INT:
-      // fallthrough
-    case PTR:
-      printf("  pop rax\n");
-      printf("  mov rax, [rax]\n");
-      printf("  push rax\n");
-      break;
-    case ARRAY:
-      // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
-      break;
-    case STRUCT:
-      // スタックに配列の先頭のアドレスを入れたままにしておく
-      break;
-    default:
-      error("不明な型の変数が見つかりました");
-      break;
-    }
+    ref_var(node->lvar->ty);
     return;
   case ND_GVAR:
     debug_comment("ND_GVAR");
     gen_gval(node);
-
-    switch (node->gvar->ty->kind) {
-    case CHAR:
-      printf("  pop rax\n");
-      printf("  movsx rax, BYTE PTR [rax]\n");
-      printf("  push rax\n");
-      break;
-    case INT:
-    case PTR:
-      printf("  pop rax\n");
-      printf("  mov rax, [rax]\n");
-      printf("  push rax\n");
-      break;
-    case ARRAY:
-      // 配列ならスタックに配列の先頭のアドレスを入れたままにしておく
-      break;
-    case STRUCT:
-      // スタックに配列の先頭のアドレスを入れたままにしておく
-      break;
-    default:
-      error("不明な型の変数が見つかりました");
-      break;
-    }
+    ref_var(node->gvar->ty);
     return;
   case ND_STR_LITERAL:
     debug_comment("ND_STR_LITERAL");
@@ -148,6 +171,8 @@ void gen(Node *node) {
       gen_lval(node->lhs);
     } else if (node->lhs->kind == ND_GVAR) {
       gen_gval(node->lhs);
+    } else if (node->lhs->kind == ND_MEM_REF) {
+      gen_mem_ref(node->lhs);
     } else {
       gen_str_literal(node->lhs);
     }

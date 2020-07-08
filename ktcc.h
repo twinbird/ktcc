@@ -122,6 +122,7 @@ typedef enum {
   ND_FUNC_DEF,    // 関数定義
   ND_ADDR,        // &
   ND_DEREF,       // *
+  ND_MEM_REF,     // .
 } NodeKind;
 
 typedef struct ArgsList ArgsList;
@@ -149,6 +150,7 @@ struct Node {
   Type *return_type;   // 関数の戻り値の型
   LVar *locals;        // 関数定義内の変数(kind: ND_FUNC_DEFの場合)
   StrLiteral *str_literal; // 文字列リテラル(kind: ND_STR_LITERALの場合)
+  char *mem_ref_name;      // .で参照するメンバ名(ND_MEM_REFの場合)
 };
 
 // 引数のリスト
@@ -217,4 +219,7 @@ char *strndup(const char *s, size_t n);
 StructMember *member_add(StructMember *list, char *name, int len, Type *t);
 Type *struct_type_add(Type *list, char *name, int len, StructMember *m);
 Type *find_type(Type *list, char *name, int len);
+Type *member_type(Type *t, char *mem_name);
+
+int align(int sz);
 #endif

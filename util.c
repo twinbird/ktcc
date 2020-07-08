@@ -47,6 +47,10 @@ int type_kind_size(TypeKind kind) {
   }
 }
 
+int align(int sz) {
+  return sz + (sz % 4);
+}
+
 int alloc_size(Type *ty) {
   if (!ty) {
     error("不正な型が見つかりました");
@@ -58,12 +62,27 @@ int alloc_size(Type *ty) {
     StructMember *m = ty->members;
     int sz = 0;
     while (m) {
-      sz += alloc_size(m->type);
+      sz += align(alloc_size(m->type));
       m = m->next;
     }
     return sz;
   }
   return type_kind_size(ty->kind);
+}
+
+Type *member_type(Type *t, char *mem_name) {
+  if (t->kind != STRUCT) {
+    error("メンバ参照する変数が構造体ではありません");
+  }
+  int sz = 0;
+  StructMember *m = t->members;
+  while (m) {
+    if (!memcmp(m->name, mem_name, m->len)) {
+      break;
+    }
+    m = m->next;
+  }
+  return m->type;
 }
 
 Type *type_of(Node *node) {
@@ -73,6 +92,9 @@ Type *type_of(Node *node) {
     break;
   case ND_LVAR:
     return node->lvar->ty;
+    break;
+  case ND_MEM_REF:
+    return member_type(node->lhs->lvar->ty, node->mem_ref_name);
     break;
   default:
     return type_of(node->lhs);
